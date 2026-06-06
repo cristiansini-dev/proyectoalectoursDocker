@@ -1,0 +1,239 @@
+<nav class="navbar">
+    <div class="navbar-left">
+        <button class="btn-menu-toggle d-lg-none" onclick="toggleMobileSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <span class="navbar-title">{% block navbar_title %}Admin Panel{% endblock %}</span>
+    </div>
+    
+    <div class="navbar-right">
+        <div class="navbar-actions">
+            <button class="btn-navbar-action" title="Notificaciones">
+                <i class="bi bi-bell"></i>
+                <span class="badge">3</span>
+            </button>
+            
+            <button class="btn-navbar-action" title="Mensajes">
+                <i class="bi bi-envelope"></i>
+            </button>
+            
+            <div class="navbar-divider"></div>
+            
+            <div class="navbar-user">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="User" class="user-avatar">
+                <div class="user-info">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Administrador</div>
+                </div>
+                <button class="btn-user-menu" onclick="toggleUserMenu(event)">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+            </div>
+            
+            <div class="user-menu" id="userMenu">
+                <a href="/admin/perfil" class="user-menu-item">
+                    <i class="bi bi-person"></i>
+                    <span>Mi Perfil</span>
+                </a>
+                <a href="/admin/perfil" class="user-menu-item">
+                    <i class="bi bi-key"></i>
+                    <span>Cambiar Contraseña</span>
+                </a>
+                <a href="#" class="user-menu-item">
+                    <i class="bi bi-gear"></i>
+                    <span>Configuración</span>
+                </a>
+                <hr>
+                <a href="#" class="user-menu-item text-danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<style>
+.navbar {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 260px;
+    transition: margin-left 0.3s ease;
+}
+
+.navbar.collapsed {
+    margin-left: 80px;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn-menu-toggle {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+}
+
+.navbar-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.navbar-right {
+    display: flex;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn-navbar-action {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.btn-navbar-action:hover {
+    color: #333;
+}
+
+.btn-navbar-action .badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.navbar-divider {
+    width: 1px;
+    height: 30px;
+    background: #e0e0e0;
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #888;
+}
+
+.btn-user-menu {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.user-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    display: none;
+    margin-top: 10px;
+}
+
+.user-menu.show {
+    display: block;
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.3s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.user-menu-item:hover {
+    background: #f5f5f5;
+}
+
+.user-menu-item i {
+    width: 20px;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        margin-left: 0;
+    }
+}
+</style>
+
+<script>
+function toggleUserMenu(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('userMenu');
+    menu.classList.toggle('show');
+}
+
+document.addEventListener('click', function() {
+    const menu = document.getElementById('userMenu');
+    menu.classList.remove('show');
+});
+
+function toggleMobileSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show');
+}
+</script>

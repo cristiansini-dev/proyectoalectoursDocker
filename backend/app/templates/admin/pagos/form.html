@@ -1,0 +1,110 @@
+{% extends "layouts/base.html" %}
+{% block title %}{% if mode == 'edit' %}Editar Pago{% else %}Nuevo Pago{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header"><h1 class="page-title">{% if mode == 'edit' %}Editar Pago{% else %}Registrar Nuevo Pago{% endif %}</h1></div>
+
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-body">
+                <form id="pagoForm" onsubmit="handleFormSubmit(event)">
+                    <div class="form-group">
+                        <label for="idReserva" class="form-label">Reserva *</label>
+                        <select id="idReserva" name="id_reserva" class="form-select" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="monto" class="form-label">Monto *</label>
+                        <input type="number" id="monto" name="monto" class="form-control" step="0.01" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="metodoPago" class="form-label">Método de Pago *</label>
+                                <select id="metodoPago" name="id_metodo_pago" class="form-select" required></select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="estado" class="form-label">Estado</label>
+                                <select id="estado" name="estado" class="form-select">
+                                    <option value="completado">Completado</option>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="referencia" class="form-label">Referencia</label>
+                        <input type="text" id="referencia" name="referencia_externa" class="form-control">
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}Guardar{% else %}Registrar Pago{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group { margin-bottom: 20px; }
+.form-label { font-weight: 600; margin-bottom: 8px; display: block; }
+.form-control, .form-select { border-radius: 6px; border: 1px solid #e0e0e0; padding: 10px 15px; width: 100%; }
+.form-control:focus, .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 168, 255, 0.25); outline: none; }
+</style>
+
+<script>
+const ENDPOINT = '/api/pagos';
+const mode = '{{ mode }}';
+const pagoId = {{ pago_id | default(0) }};
+
+async function loadSelects() {
+    await populateSelect('/api/reservas', 'idReserva', 'id_reserva', 'id_reserva', 'Seleccionar reserva');
+    await populateSelect('/api/metodos-pago', 'metodoPago', 'id_metodo_pago', 'nombre_metodo', 'Seleccionar método');
+}
+
+async function loadData() {
+    if (mode === 'edit' && pagoId) {
+        const result = await fetchAPI('GET', `${ENDPOINT}/${pagoId}`, null, true);
+        if (result.ok) {
+            const p = result.data;
+            document.getElementById('idReserva').value = p.id_reserva;
+            document.getElementById('monto').value = p.monto;
+            document.getElementById('metodoPago').value = p.id_metodo_pago || '';
+            document.getElementById('estado').value = p.estado || 'completado';
+            document.getElementById('referencia').value = p.referencia_externa || '';
+        }
+    }
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    const form = document.getElementById('pagoForm');
+    const data = Object.fromEntries(new FormData(form));
+    for (const key in data) {
+        if (data[key] === '') data[key] = null;
+        else if (!isNaN(data[key]) && data[key] !== null) data[key] = Number(data[key]);
+    }
+    
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    const url = mode === 'edit' ? `${ENDPOINT}/${pagoId}` : ENDPOINT;
+    const result = await fetchAPI(method, url, data, true);
+    
+    if (result.ok) {
+        showSuccess('Operación exitosa');
+        setTimeout(() => location.href = '/admin/pagos', 1500);
+    } else showError(result.data.detail || 'Error');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSelects();
+    await loadData();
+});
+</script>
+{% endblock %}

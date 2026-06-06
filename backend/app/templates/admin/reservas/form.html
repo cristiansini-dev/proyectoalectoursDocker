@@ -1,0 +1,105 @@
+{% extends "layouts/base.html" %}
+{% block title %}{% if mode == 'edit' %}Editar Reserva{% else %}Nueva Reserva{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header"><h1 class="page-title">{% if mode == 'edit' %}Editar Reserva{% else %}Crear Nueva Reserva{% endif %}</h1></div>
+
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle"></i> Datos de la Reserva</div>
+            <div class="card-body">
+                <form id="reservaForm" onsubmit="handleFormSubmit(event)">
+                    <div class="form-group">
+                        <label for="idCliente" class="form-label">Cliente *</label>
+                        <select id="idCliente" name="id_cliente" class="form-select" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="idHabitacion" class="form-label">Habitación *</label>
+                        <select id="idHabitacion" name="id_habitacion" class="form-select" required></select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fechaInicio" class="form-label">Fecha Inicio *</label>
+                                <input type="date" id="fechaInicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fechaFin" class="form-label">Fecha Fin *</label>
+                                <input type="date" id="fechaFin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="totalCosto" class="form-label">Costo Total</label>
+                        <input type="number" id="totalCosto" name="total_costo" class="form-control" step="0.01">
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}Guardar{% else %}Crear Reserva{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group { margin-bottom: 20px; }
+.form-label { font-weight: 600; margin-bottom: 8px; display: block; }
+.form-control, .form-select { border-radius: 6px; border: 1px solid #e0e0e0; padding: 10px 15px; width: 100%; }
+.form-control:focus, .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 168, 255, 0.25); outline: none; }
+</style>
+
+<script>
+const ENDPOINT = '/api/reservas';
+const mode = '{{ mode }}';
+const reservaId = {{ reserva_id | default(0) }};
+
+async function loadSelects() {
+    await populateSelect('/api/clientes', 'idCliente', 'id_cliente', 'nombre', 'Seleccionar cliente');
+    await populateSelect('/api/hoteles/1/habitaciones', 'idHabitacion', 'id_habitacion', 'numero_habitacion', 'Seleccionar habitación');
+}
+
+async function loadData() {
+    if (mode === 'edit' && reservaId) {
+        const result = await fetchAPI('GET', `${ENDPOINT}/${reservaId}`, null, true);
+        if (result.ok) {
+            const r = result.data;
+            document.getElementById('idCliente').value = r.id_cliente;
+            document.getElementById('idHabitacion').value = r.id_habitacion;
+            document.getElementById('fechaInicio').value = r.fecha_inicio;
+            document.getElementById('fechaFin').value = r.fecha_fin;
+            document.getElementById('totalCosto').value = r.total_costo || '';
+        }
+    }
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    const form = document.getElementById('reservaForm');
+    const data = Object.fromEntries(new FormData(form));
+    for (const key in data) if (data[key] === '') data[key] = null;
+    else if (!isNaN(data[key])) data[key] = Number(data[key]);
+    
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    const url = mode === 'edit' ? `${ENDPOINT}/${reservaId}` : ENDPOINT;
+    const result = await fetchAPI(method, url, data, true);
+    
+    if (result.ok) {
+        showSuccess('Operación exitosa');
+        setTimeout(() => location.href = '/admin/reservas', 1500);
+    } else showError(result.data.detail || 'Error');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSelects();
+    await loadData();
+});
+</script>
+{% endblock %}

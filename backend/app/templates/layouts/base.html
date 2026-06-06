@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AlecTours Admin{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="d-flex">
+        <!-- SIDEBAR -->
+        {% include 'layouts/sidebar.html' %}
+        
+        <!-- MAIN CONTENT -->
+        <div class="flex-grow-1 main-content">
+            <!-- NAVBAR -->
+            {% include 'layouts/navbar.html' %}
+            
+            <!-- ALERTS -->
+            <div class="container-fluid alerts-container">
+                {% include 'layouts/alerts.html' %}
+            </div>
+            
+            <!-- PAGE CONTENT -->
+            <main class="container-fluid content-area">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL GENÉRICO -->
+    {% include 'layouts/modal.html' %}
+
+    <!-- jQuery (para AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="/static/js/notifications.js"></script>
+    <script src="/static/js/crud-handler.js"></script>
+    <script src="/static/js/form-validator.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

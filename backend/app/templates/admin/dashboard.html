@@ -1,0 +1,715 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - AlecTours Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="text-muted">Bienvenido al panel administrativo</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="location.href='/admin/hoteles/nuevo'">
+            <i class="bi bi-plus"></i> Nuevo Hotel
+        </button>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS CON ANIMACIÓN -->
+<div class="row g-4 mb-4">
+    <!-- Hoteles -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card stat-card-primary">
+            <div class="card-body">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <span class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> 12%
+                    </span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Hoteles Registrados</div>
+                    <div class="stat-value" id="stat-hoteles">0</div>
+                    <a href="/admin/hoteles" class="stat-link">Ver listado completo →</a>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 75%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clientes -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card stat-card-success">
+            <div class="card-body">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <span class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> 8%
+                    </span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Clientes Activos</div>
+                    <div class="stat-value" id="stat-clientes">0</div>
+                    <a href="/admin/clientes" class="stat-link">Ver perfil de clientes →</a>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 60%; background: var(--success-color);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reservas -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card stat-card-warning">
+            <div class="card-body">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar2-check"></i>
+                    </div>
+                    <span class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> 23%
+                    </span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Reservas Pendientes</div>
+                    <div class="stat-value" id="stat-reservas">0</div>
+                    <a href="/admin/reservas" class="stat-link">Gestionar reservas →</a>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 45%; background: var(--warning-color);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ingresos -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card stat-card-info">
+            <div class="card-body">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-cash-coin"></i>
+                    </div>
+                    <span class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> 15%
+                    </span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Ingresos del Mes</div>
+                    <div class="stat-value" id="stat-ingresos">$0</div>
+                    <a href="/admin/pagos" class="stat-link">Ver transacciones →</a>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 82%; background: var(--info-color);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ACCESOS RÁPIDOS -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lightning"></i>
+                Acciones Rápidas
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="/admin/hoteles/nuevo" class="quick-action-btn">
+                        <div class="quick-action-icon">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <div class="quick-action-title">Nuevo Hotel</div>
+                            <div class="quick-action-desc">Crear un nuevo hotel</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/admin/clientes/nuevo" class="quick-action-btn">
+                        <div class="quick-action-icon">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <div class="quick-action-title">Nuevo Cliente</div>
+                            <div class="quick-action-desc">Registrar un nuevo cliente</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/admin/reservas/nueva" class="quick-action-btn">
+                        <div class="quick-action-icon">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <div class="quick-action-title">Nueva Reserva</div>
+                            <div class="quick-action-desc">Crear una nueva reserva</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/admin/paquetes/nuevo" class="quick-action-btn">
+                        <div class="quick-action-icon">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <div class="quick-action-title">Nuevo Paquete</div>
+                            <div class="quick-action-desc">Crear un nuevo paquete turístico</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i>
+                Información del Sistema
+            </div>
+            <div class="card-body">
+                <div class="system-info">
+                    <div class="info-item">
+                        <span class="info-label">API Status</span>
+                        <span class="badge badge-success">Online</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Base de Datos</span>
+                        <span class="badge badge-success">Conectada</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Última Sincronización</span>
+                        <span class="info-value">Ahora</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Versión del Sistema</span>
+                        <span class="info-value">1.0.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">URL de API</span>
+                        <span class="info-value">/api</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICOS Y ACTIVIDAD -->
+<div class="row g-4 mt-2">
+    <!-- OCUPACIÓN DE HOTELES -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-bar-chart"></i>
+                Ocupación por Hotel
+            </div>
+            <div class="card-body">
+                <div class="occupancy-list">
+                    <div class="occupancy-item">
+                        <div class="occupancy-name">Hotel Paradiso Beach</div>
+                        <div class="occupancy-bar">
+                            <div class="occupancy-fill" style="width: 85%; background: linear-gradient(90deg, #28a745, #20c997);"></div>
+                        </div>
+                        <span class="occupancy-percentage">85%</span>
+                    </div>
+                    <div class="occupancy-item">
+                        <div class="occupancy-name">Hotel Mountain Resort</div>
+                        <div class="occupancy-bar">
+                            <div class="occupancy-fill" style="width: 62%; background: linear-gradient(90deg, #17a2b8, #20c997);"></div>
+                        </div>
+                        <span class="occupancy-percentage">62%</span>
+                    </div>
+                    <div class="occupancy-item">
+                        <div class="occupancy-name">Hotel Urban Center</div>
+                        <div class="occupancy-bar">
+                            <div class="occupancy-fill" style="width: 48%; background: linear-gradient(90deg, #ffc107, #fd7e14);"></div>
+                        </div>
+                        <span class="occupancy-percentage">48%</span>
+                    </div>
+                    <div class="occupancy-item">
+                        <div class="occupancy-name">Hotel Countryside Inn</div>
+                        <div class="occupancy-bar">
+                            <div class="occupancy-fill" style="width: 92%; background: linear-gradient(90deg, #28a745, #20c997);"></div>
+                        </div>
+                        <span class="occupancy-percentage">92%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ACTIVIDAD RECIENTE -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock-history"></i>
+                Actividad Reciente
+            </div>
+            <div class="card-body">
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">Nueva Reserva Confirmada</div>
+                            <small class="activity-time">Hace 10 minutos</small>
+                        </div>
+                        <span class="activity-badge">+$320</span>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon info">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">Nuevo Cliente Registrado</div>
+                            <small class="activity-time">Hace 25 minutos</small>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon warning">
+                            <i class="bi bi-exclamation-circle"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">Reserva Pendiente de Pago</div>
+                            <small class="activity-time">Hace 1 hora</small>
+                        </div>
+                        <span class="activity-badge">$450</span>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon success">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">Pago Recibido</div>
+                            <small class="activity-time">Hace 2 horas</small>
+                        </div>
+                        <span class="activity-badge">+$850</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* TARJETAS DE ESTADÍSTICAS MEJORADAS */
+.stat-card {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: none;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s ease;
+    z-index: 1;
+}
+
+.stat-card:hover::before {
+    left: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 168, 255, 0.15);
+}
+
+.stat-card-primary .stat-icon { color: #00a8ff; }
+.stat-card-success .stat-icon { color: #28a745; }
+.stat-card-warning .stat-icon { color: #ffc107; }
+.stat-card-info .stat-icon { color: #17a2b8; }
+
+.stat-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.stat-icon {
+    font-size: 32px;
+    opacity: 0.9;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.stat-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.stat-change.positive {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.stat-change.negative {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.stat-link {
+    font-size: 11px;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.stat-link:hover {
+    gap: 8px;
+    transform: translateX(3px);
+}
+
+.stat-progress {
+    height: 4px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 2px;
+    animation: slideIn 1s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        width: 0 !important;
+        opacity: 0;
+    }
+}
+
+/* ACCIONES RÁPIDAS MEJORADAS */
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quick-action-btn {
+    display: flex;
+    gap: 15px;
+    padding: 16px;
+    border-radius: 10px;
+    background: var(--light-bg);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 4px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 100%;
+    background: rgba(0, 168, 255, 0.05);
+    transition: width 0.3s ease;
+    z-index: 0;
+}
+
+.quick-action-btn:hover::before {
+    width: 100%;
+}
+
+.quick-action-btn:hover {
+    background: rgba(0, 168, 255, 0.08);
+    border-left-color: var(--primary-color);
+    transform: translateX(8px);
+    box-shadow: 0 8px 20px rgba(0, 168, 255, 0.1);
+}
+
+.quick-action-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--primary-color), #0088cc);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(0, 168, 255, 0.3);
+}
+
+.quick-action-btn:hover .quick-action-icon {
+    transform: scale(1.1) rotate(-5deg);
+    box-shadow: 0 6px 16px rgba(0, 168, 255, 0.4);
+}
+
+.quick-action-text {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.quick-action-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+}
+
+.quick-action-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* INFORMACIÓN DEL SISTEMA */
+.system-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px;
+    background: var(--light-bg);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: rgba(0, 168, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.info-value {
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+/* ANIMACIONES */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card {
+    animation: fadeInUp 0.6s ease-out backwards;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* OCUPACIÓN DE HOTELES */
+.occupancy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.occupancy-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.occupancy-name {
+    grid-column: 1 / -1;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.occupancy-bar {
+    grid-column: 1;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.occupancy-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.occupancy-percentage {
+    grid-column: 2;
+    grid-row: 2;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 13px;
+}
+
+/* ACTIVIDAD RECIENTE */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--light-bg);
+    border-radius: 8px;
+    align-items: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.activity-item:hover {
+    background: rgba(0, 168, 255, 0.08);
+    transform: translateX(4px);
+    border-left-color: var(--primary-color);
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.activity-icon.success {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.activity-icon.info {
+    background: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+}
+
+.activity-icon.warning {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.activity-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.activity-time {
+    color: var(--text-secondary);
+    display: block;
+    font-size: 11px;
+}
+
+.activity-badge {
+    font-weight: 700;
+    color: #28a745;
+    font-size: 12px;
+    white-space: nowrap;
+}
+</style>
+
+<script>
+// Cargar estadísticas
+async function loadStatistics() {
+    try {
+        const [hoteles, clientes, reservas, pagos] = await Promise.all([
+            fetchAPI('GET', '/api/hoteles?limit=1'),
+            fetchAPI('GET', '/api/clientes?limit=1'),
+            fetchAPI('GET', '/api/reservas?limit=1'),
+            fetchAPI('GET', '/api/pagos?limit=1')
+        ]);
+        
+        // Mostrar datos (por ahora valores ficticios, necesitaremos endpoint de estadísticas)
+        document.getElementById('stat-hoteles').textContent = '12';
+        document.getElementById('stat-clientes').textContent = '48';
+        document.getElementById('stat-reservas').textContent = '156';
+        document.getElementById('stat-pagos').textContent = '24';
+    } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+    }
+}
+
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', loadStatistics);
+</script>
+{% endblock %}

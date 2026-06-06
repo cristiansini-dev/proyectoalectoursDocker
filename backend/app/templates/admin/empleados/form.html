@@ -1,0 +1,134 @@
+{% extends "layouts/base.html" %}
+{% block title %}{% if mode == 'edit' %}Editar Empleado{% else %}Nuevo Empleado{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header"><h1 class="page-title">{% if mode == 'edit' %}Editar Empleado{% else %}Crear Nuevo Empleado{% endif %}</h1></div>
+
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle"></i> Datos del Empleado</div>
+            <div class="card-body">
+                <form id="empleadoForm" onsubmit="handleFormSubmit(event)">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">Nombre *</label>
+                                <input type="text" id="nombre" name="nombre" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="apellido" class="form-label">Apellido *</label>
+                                <input type="text" id="apellido" name="apellido" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cedula" class="form-label">Cédula *</label>
+                                <input type="text" id="cedula" name="cedula" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="correo" class="form-label">Email</label>
+                                <input type="email" id="correo" name="correo_electronico" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="celular" class="form-label">Celular</label>
+                                <input type="tel" id="celular" name="celular" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ciudad" class="form-label">Ciudad</label>
+                                <input type="text" id="ciudad" name="ciudad" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="pais" class="form-label">País</label>
+                                <input type="text" id="pais" name="pais" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}Guardar Cambios{% else %}Crear Empleado{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group { margin-bottom: 20px; }
+.form-label { font-weight: 600; margin-bottom: 8px; display: block; }
+.form-control { border-radius: 6px; border: 1px solid #e0e0e0; padding: 10px 15px; width: 100%; }
+.form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 168, 255, 0.25); outline: none; }
+</style>
+
+<script>
+const ENDPOINT = '/api/empleados';
+const mode = '{{ mode }}';
+const empleadoId = {{ empleado_id | default(0) }};
+
+async function loadData() {
+    if (mode === 'edit' && empleadoId) {
+        const result = await fetchAPI('GET', `${ENDPOINT}/${empleadoId}`, null, true);
+        if (result.ok) {
+            const e = result.data;
+            document.getElementById('nombre').value = e.nombre;
+            document.getElementById('apellido').value = e.apellido;
+            document.getElementById('cedula').value = e.cedula;
+            document.getElementById('correo').value = e.correo_electronico || '';
+            document.getElementById('celular').value = e.celular || '';
+            document.getElementById('direccion').value = e.direccion || '';
+            document.getElementById('ciudad').value = e.ciudad || '';
+            document.getElementById('pais').value = e.pais || '';
+        }
+    }
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    const form = document.getElementById('empleadoForm');
+    const data = Object.fromEntries(new FormData(form));
+    for (const key in data) if (data[key] === '') data[key] = null;
+    
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    const url = mode === 'edit' ? `${ENDPOINT}/${empleadoId}` : ENDPOINT;
+    const result = await fetchAPI(method, url, data, true);
+    
+    if (result.ok) {
+        showSuccess(mode === 'edit' ? 'Actualizado' : 'Creado');
+        setTimeout(() => location.href = '/admin/empleados', 1500);
+    } else showError(result.data.detail || 'Error');
+}
+
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+{% endblock %}

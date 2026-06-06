@@ -1,0 +1,751 @@
+{% extends "layouts/base.html" %}
+{% block title %}Dashboard - AlecTours Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard Premium</h1>
+        <p class="text-muted">Panel de control en tiempo real</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="generateReport()">
+            <i class="bi bi-download"></i> Descargar Reporte
+        </button>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS PRINCIPALES -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Ingresos Totales</div>
+                <div class="stat-value" id="ingresos">$0</div>
+                <div class="stat-change positive">+12% vs mes anterior</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Reservas Confirmadas</div>
+                <div class="stat-value" id="reservasConfirmadas">0</div>
+                <div class="stat-change positive">+8% vs mes anterior</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card warning">
+            <div class="stat-icon"><i class="bi bi-door-closed"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Ocupación Promedio</div>
+                <div class="stat-value" id="ocupacion">0%</div>
+                <div class="stat-change">Habitaciones disponibles</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Clientes Nuevos</div>
+                <div class="stat-value" id="clientesNuevos">0</div>
+                <div class="stat-change positive">Este mes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICAS -->
+<div class="row g-4 mb-4">
+    <!-- Ingresos Mensuales -->
+    <div class="col-lg-8">
+        <div class="chart-card">
+            <h5 class="chart-title">
+                <i class="bi bi-graph-up"></i> Ingresos Mensuales
+            </h5>
+            <canvas id="chartIngresos" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Ocupación por Hotel -->
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <h5 class="chart-title">
+                <i class="bi bi-pie-chart"></i> Ocupación por Hotel
+            </h5>
+            <canvas id="chartOcupacion" height="80"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICAS SEGUNDO ROW -->
+<div class="row g-4 mb-4">
+    <!-- Estado de Reservas -->
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <h5 class="chart-title">
+                <i class="bi bi-check-circle"></i> Estado de Reservas
+            </h5>
+            <canvas id="chartReservas" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Métodos de Pago -->
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <h5 class="chart-title">
+                <i class="bi bi-credit-card"></i> Métodos de Pago
+            </h5>
+            <canvas id="chartPagos" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Paquetes Vendidos -->
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <h5 class="chart-title">
+                <i class="bi bi-gift"></i> Paquetes Top
+            </h5>
+            <div id="topPaquetes"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLAS REALES -->
+<div class="row g-4 mb-4">
+    <!-- Últimas Reservas -->
+    <div class="col-lg-6">
+        <div class="table-card">
+            <h5 class="table-title">
+                <i class="bi bi-list-check"></i> Últimas Reservas
+            </h5>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Hotel</th>
+                            <th>Fechas</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ultimas-reservas">
+                        <tr><td colspan="5" class="text-center">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ocupación por Habitación -->
+    <div class="col-lg-6">
+        <div class="table-card">
+            <h5 class="table-title">
+                <i class="bi bi-door-closed"></i> Habitaciones (Estado Actual)
+            </h5>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Hotel</th>
+                            <th>Total</th>
+                            <th>Ocupadas</th>
+                            <th>Disponibles</th>
+                            <th>% Ocupación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="habitaciones-estado">
+                        <tr><td colspan="5" class="text-center">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ACTIVIDAD RECIENTE -->
+<div class="row g-4">
+    <!-- Clientes Recientes -->
+    <div class="col-lg-6">
+        <div class="table-card">
+            <h5 class="table-title">
+                <i class="bi bi-person-plus"></i> Clientes Recientes
+            </h5>
+            <div id="clientes-recientes"></div>
+        </div>
+    </div>
+
+    <!-- Top Paquetes -->
+    <div class="col-lg-6">
+        <div class="table-card">
+            <h5 class="table-title">
+                <i class="bi bi-star"></i> Ingresos por Paquete
+            </h5>
+            <div id="ingresos-paquetes"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    border-left: 4px solid;
+}
+
+.stat-card.primary { border-left-color: #00a8ff; }
+.stat-card.success { border-left-color: #28a745; }
+.stat-card.warning { border-left-color: #ffc107; }
+.stat-card.info { border-left-color: #17a2b8; }
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 168, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #00a8ff;
+}
+
+.stat-card.success .stat-icon { background: rgba(40, 167, 69, 0.1); color: #28a745; }
+.stat-card.warning .stat-icon { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+.stat-card.info .stat-icon { background: rgba(23, 162, 184, 0.1); color: #17a2b8; }
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.stat-change {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.stat-change.positive {
+    color: #28a745;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.table-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table thead th {
+    background: rgba(0, 0, 0, 0.02);
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-confirmada {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-pendiente {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.status-cancelada {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.cliente-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.cliente-item:last-child {
+    border-bottom: none;
+}
+
+.cliente-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #00a8ff 0%, #0088cc 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.cliente-info h6 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cliente-info p {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.paquete-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.paquete-item:last-child {
+    border-bottom: none;
+}
+
+.paquete-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.paquete-monto {
+    font-size: 14px;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        flex-direction: column;
+    }
+    
+    .data-table {
+        font-size: 12px;
+    }
+    
+    .data-table thead th,
+    .data-table tbody td {
+        padding: 8px;
+    }
+}
+</style>
+
+<script src="/static/js/chart.min.js"></script>
+<script src="/static/js/jspdf.min.js"></script>
+<script src="/static/js/html2canvas.min.js"></script>
+
+<script>
+let chartsInstances = {};
+
+async function loadDashboard() {
+    try {
+        // Cargar datos principales
+        const [hoteles, clientes, reservas, habitaciones, pagos, paquetes] = await Promise.all([
+            fetchAPI('GET', '/api/hoteles?limit=100', null),
+            fetchAPI('GET', '/api/clientes?limit=100', null),
+            fetchAPI('GET', '/api/reservas?limit=100', null),
+            fetchAPI('GET', '/api/habitaciones?limit=100', null),
+            fetchAPI('GET', '/api/pagos?limit=100', null),
+            fetchAPI('GET', '/api/paquetes?limit=100', null)
+        ]);
+
+        if (!hoteles.ok || !clientes.ok || !reservas.ok || !habitaciones.ok || !pagos.ok || !paquetes.ok) {
+            showError('Error al cargar datos del dashboard');
+            return;
+        }
+
+        const hotelesData = hoteles.data || [];
+        const clientesData = clientes.data || [];
+        const reservasData = reservas.data || [];
+        const habitacionesData = habitaciones.data || [];
+        const pagosData = pagos.data || [];
+        const paquetesData = paquetes.data || [];
+
+        updateStats(reservasData, pagosData, habitacionesData, clientesData);
+        renderCharts(reservasData, pagosData, paquetesData, hotelesData, habitacionesData);
+        renderTables(reservasData, habitacionesData, clientesData, pagosData, paquetesData);
+
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+    }
+}
+
+function updateStats(reservas, pagos, habitaciones, clientes) {
+    // Ingresos totales
+    const ingresos = pagos.reduce((sum, p) => sum + (p.estado === 'completado' ? parseFloat(p.monto || 0) : 0), 0);
+    document.getElementById('ingresos').textContent = `$${ingresos.toFixed(2)}`;
+
+    // Reservas confirmadas
+    const confirmadas = reservas.filter(r => r.estado === 'confirmada').length;
+    document.getElementById('reservasConfirmadas').textContent = confirmadas;
+
+    // Ocupación promedio
+    const ocupadas = habitaciones.filter(h => h.estado === 'ocupada').length;
+    const ocupacion = habitaciones.length > 0 ? Math.round((ocupadas / habitaciones.length) * 100) : 0;
+    document.getElementById('ocupacion').textContent = ocupacion + '%';
+
+    // Clientes nuevos este mes
+    const hoy = new Date();
+    const primerMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const clientesNuevos = clientes.filter(c => new Date(c.fecha_registro || c.created_at) >= primerMes).length;
+    document.getElementById('clientesNuevos').textContent = clientesNuevos;
+}
+
+function renderCharts(reservas, pagos, paquetes, hoteles, habitaciones) {
+    // 1. Ingresos Mensuales (últimos 6 meses)
+    renderIngresosChart(pagos);
+
+    // 2. Ocupación por Hotel
+    renderOcupacionChart(habitaciones, hoteles);
+
+    // 3. Estado de Reservas
+    renderReservasChart(reservas);
+
+    // 4. Métodos de Pago
+    renderPagosChart(pagos);
+}
+
+function renderIngresosChart(pagos) {
+    const ctx = document.getElementById('chartIngresos');
+    if (!ctx) return;
+
+    const meses = [];
+    const ingresos = [];
+
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const mes = date.toLocaleString('es-ES', { month: 'short', year: '2-digit' });
+        meses.push(mes);
+
+        const mesInicio = new Date(date.getFullYear(), date.getMonth(), 1);
+        const mesFin = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+        const montoMes = pagos
+            .filter(p => {
+                const fecha = new Date(p.fecha_pago);
+                return fecha >= mesInicio && fecha <= mesFin && p.estado === 'completado';
+            })
+            .reduce((sum, p) => sum + parseFloat(p.monto || 0), 0);
+
+        ingresos.push(montoMes);
+    }
+
+    if (chartsInstances.ingresos) chartsInstances.ingresos.destroy();
+
+    chartsInstances.ingresos = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: meses,
+            datasets: [{
+                label: 'Ingresos',
+                data: ingresos,
+                borderColor: '#00a8ff',
+                backgroundColor: 'rgba(0, 168, 255, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#00a8ff',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: v => '$' + v }
+                }
+            }
+        }
+    });
+}
+
+function renderOcupacionChart(habitaciones, hoteles) {
+    const ctx = document.getElementById('chartOcupacion');
+    if (!ctx) return;
+
+    const hotelesMap = new Map(hoteles.map(h => [h.id_hotel, h.nombre]));
+    const ocupacionPorHotel = {};
+
+    habitaciones.forEach(h => {
+        const hotelNombre = hotelesMap.get(h.hotel_id) || 'Hotel ' + h.hotel_id;
+        if (!ocupacionPorHotel[hotelNombre]) {
+            ocupacionPorHotel[hotelNombre] = { total: 0, ocupadas: 0 };
+        }
+        ocupacionPorHotel[hotelNombre].total++;
+        if (h.estado === 'ocupada') {
+            ocupacionPorHotel[hotelNombre].ocupadas++;
+        }
+    });
+
+    const labels = Object.keys(ocupacionPorHotel);
+    const datos = labels.map(h => Math.round((ocupacionPorHotel[h].ocupadas / ocupacionPorHotel[h].total) * 100));
+
+    const colores = ['#00a8ff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1'];
+
+    if (chartsInstances.ocupacion) chartsInstances.ocupacion.destroy();
+
+    chartsInstances.ocupacion = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: datos,
+                backgroundColor: colores.slice(0, labels.length),
+                borderColor: '#fff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
+
+function renderReservasChart(reservas) {
+    const ctx = document.getElementById('chartReservas');
+    if (!ctx) return;
+
+    const estados = {
+        confirmada: reservas.filter(r => r.estado === 'confirmada').length,
+        pendiente: reservas.filter(r => r.estado === 'pendiente').length,
+        cancelada: reservas.filter(r => r.estado === 'cancelada').length
+    };
+
+    if (chartsInstances.reservas) chartsInstances.reservas.destroy();
+
+    chartsInstances.reservas = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Confirmadas', 'Pendientes', 'Canceladas'],
+            datasets: [{
+                label: 'Reservas',
+                data: [estados.confirmada, estados.pendiente, estados.cancelada],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+}
+
+function renderPagosChart(pagos) {
+    const ctx = document.getElementById('chartPagos');
+    if (!ctx) return;
+
+    const metodos = {};
+    pagos.forEach(p => {
+        const metodo = p.metodo_pago || 'Desconocido';
+        metodos[metodo] = (metodos[metodo] || 0) + 1;
+    });
+
+    if (chartsInstances.pagos) chartsInstances.pagos.destroy();
+
+    chartsInstances.pagos = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(metodos),
+            datasets: [{
+                label: 'Pagos',
+                data: Object.values(metodos),
+                backgroundColor: '#00a8ff',
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+}
+
+function renderTables(reservas, habitaciones, clientes, pagos, paquetes) {
+    // Últimas reservas
+    const ultimasReservas = reservas.slice(-5).reverse().map(r => `
+        <tr>
+            <td><strong>${r.cliente?.nombre || '-'}</strong></td>
+            <td>${r.habitacion?.numero_habitacion || '-'}</td>
+            <td>${new Date(r.fecha_inicio).toLocaleDateString()}</td>
+            <td>$${parseFloat(r.total_costo || 0).toFixed(2)}</td>
+            <td><span class="status-badge status-${r.estado}">${r.estado}</span></td>
+        </tr>
+    `).join('');
+    document.getElementById('ultimas-reservas').innerHTML = ultimasReservas || '<tr><td colspan="5">Sin reservas</td></tr>';
+
+    // Estado de habitaciones
+    const hoteles = new Map();
+    habitaciones.forEach(h => {
+        if (!hoteles.has(h.hotel_id)) {
+            hoteles.set(h.hotel_id, { total: 0, ocupadas: 0, nombre: h.hotel?.nombre || 'Hotel ' + h.hotel_id });
+        }
+        const hotel = hoteles.get(h.hotel_id);
+        hotel.total++;
+        if (h.estado === 'ocupada') hotel.ocupadas++;
+    });
+
+    const habitacionesHtml = Array.from(hoteles.values()).map(h => {
+        const porcent = Math.round((h.ocupadas / h.total) * 100);
+        return `
+            <tr>
+                <td><strong>${h.nombre}</strong></td>
+                <td>${h.total}</td>
+                <td>${h.ocupadas}</td>
+                <td>${h.total - h.ocupadas}</td>
+                <td><span style="color: ${porcent > 70 ? '#28a745' : porcent > 40 ? '#ffc107' : '#dc3545'}; font-weight: bold;">${porcent}%</span></td>
+            </tr>
+        `;
+    }).join('');
+    document.getElementById('habitaciones-estado').innerHTML = habitacionesHtml || '<tr><td colspan="5">Sin datos</td></tr>';
+
+    // Clientes recientes
+    const clientesRecientes = clientes.slice(-5).reverse().map(c => `
+        <div class="cliente-item">
+            <div class="cliente-avatar">${c.nombre?.[0] || 'C'}</div>
+            <div class="cliente-info">
+                <h6>${c.nombre} ${c.apellido || ''}</h6>
+                <p>${c.correo}</p>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('clientes-recientes').innerHTML = clientesRecientes || '<div style="padding: 12px; text-align: center; color: #999;">Sin clientes nuevos</div>';
+
+    // Ingresos por paquete
+    const ingresosPaquete = paquetes.map(p => {
+        const ventasMes = pagos.filter(pg => {
+            const fecha = new Date(pg.fecha_pago);
+            return fecha.getMonth() === new Date().getMonth() && fecha.getFullYear() === new Date().getFullYear();
+        }).length;
+        return { nombre: p.nombre, monto: p.precio * (ventasMes || 1) };
+    })
+    .sort((a, b) => b.monto - a.monto)
+    .slice(0, 5)
+    .map(p => `
+        <div class="paquete-item">
+            <span class="paquete-name">${p.nombre}</span>
+            <span class="paquete-monto">$${p.monto.toFixed(2)}</span>
+        </div>
+    `).join('');
+    
+    document.getElementById('ingresos-paquetes').innerHTML = ingresosPaquete || '<div style="padding: 12px; text-align: center; color: #999;">Sin datos</div>';
+}
+
+function generateReport() {
+    const element = document.querySelector('.page-header').parentElement;
+    html2canvas(element).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF();
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save('dashboard-reporte.pdf');
+        showSuccess('Reporte generado exitosamente');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock %}

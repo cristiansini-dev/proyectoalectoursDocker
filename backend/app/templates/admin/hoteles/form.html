@@ -1,0 +1,237 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Editar Hotel{% else %}Nuevo Hotel{% endif %} - AlecTours Admin{% endblock %}
+
+{% block navbar_title %}{% if mode == 'edit' %}Editar Hotel{% else %}Crear Nuevo Hotel{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if mode == 'edit' %}Editar Hotel{% else %}Crear Nuevo Hotel{% endif %}</h1>
+        <p class="text-muted">Completa los datos del hotel</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-secondary" onclick="history.back()">
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i>
+                Información del Hotel
+            </div>
+            <div class="card-body">
+                <form id="hotelForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="hotelId" value="">
+                    
+                    <!-- Nombre del Hotel -->
+                    <div class="form-group">
+                        <label for="nombreHotel" class="form-label">Nombre del Hotel *</label>
+                        <input type="text" id="nombreHotel" name="nombre_hotel" class="form-control" 
+                               placeholder="Ej: Hotel Paradise" required>
+                        <small class="form-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <!-- Calificación -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="calificacion" class="form-label">Calificación</label>
+                                <select id="calificacion" name="calificacion" class="form-select">
+                                    <option value="">Sin calificar</option>
+                                    <option value="1">★ 1 Estrella</option>
+                                    <option value="2">★★ 2 Estrellas</option>
+                                    <option value="3">★★★ 3 Estrellas</option>
+                                    <option value="4">★★★★ 4 Estrellas</option>
+                                    <option value="5">★★★★★ 5 Estrellas</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Código Postal -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="codigoPostal" class="form-label">Código Postal</label>
+                                <input type="text" id="codigoPostal" name="codigo_postal" class="form-control" 
+                                       placeholder="Ej: 28001">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dirección -->
+                    <div class="form-group">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control" 
+                               placeholder="Ej: Calle Principal 123">
+                        <small class="form-text">Máximo 255 caracteres</small>
+                    </div>
+                    
+                    <!-- Ubicación -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ciudad" class="form-label">Ciudad</label>
+                                <input type="text" id="ciudad" name="ciudad" class="form-control" 
+                                       placeholder="Ej: Madrid">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="pais" class="form-label">País</label>
+                                <input type="text" id="pais" name="pais" class="form-control" 
+                                       placeholder="Ej: España">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contacto -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" id="telefono" name="telefono" class="form-control" 
+                                       placeholder="Ej: +34 91 123 4567">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="correo" class="form-label">Correo Electrónico</label>
+                                <input type="email" id="correo" name="correo_electronico" class="form-control" 
+                                       placeholder="Ej: info@hotel.com">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="form-group" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-check-lg"></i>
+                            {% if mode == 'edit' %}Guardar Cambios{% else %}Crear Hotel{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: #333;
+}
+
+.form-control,
+.form-select {
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    padding: 10px 15px;
+    width: 100%;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 168, 255, 0.25);
+    outline: none;
+}
+
+.form-text {
+    font-size: 12px;
+    color: #888;
+    display: block;
+    margin-top: 5px;
+}
+</style>
+
+<script>
+const ENDPOINT = '/api/hoteles';
+const mode = '{{ mode }}';
+const hotelId = {{ hotel_id | default(0) }};
+
+// Cargar datos si es edición
+async function loadHotelData() {
+    if (mode === 'edit' && hotelId) {
+        showSpinner('Cargando datos del hotel...');
+        
+        const result = await fetchAPI('GET', `${ENDPOINT}/${hotelId}`, null, true);
+        
+        if (result.ok) {
+            const hotel = result.data;
+            document.getElementById('hotelId').value = hotel.id_hotel;
+            document.getElementById('nombreHotel').value = hotel.nombre_hotel;
+            document.getElementById('calificacion').value = hotel.calificacion || '';
+            document.getElementById('direccion').value = hotel.direccion || '';
+            document.getElementById('ciudad').value = hotel.ciudad || '';
+            document.getElementById('pais').value = hotel.pais || '';
+            document.getElementById('codigoPostal').value = hotel.codigo_postal || '';
+            document.getElementById('telefono').value = hotel.telefono || '';
+            document.getElementById('correo').value = hotel.correo_electronico || '';
+        } else {
+            showError('Error al cargar los datos del hotel');
+            setTimeout(() => history.back(), 2000);
+        }
+    }
+}
+
+// Manejar envío del formulario
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('hotelForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    // Convertir valores
+    if (data.calificacion === '') delete data.calificacion;
+    else data.calificacion = parseInt(data.calificacion);
+    
+    // Limpiar valores vacíos
+    for (const key in data) {
+        if (data[key] === '') {
+            data[key] = null;
+        }
+    }
+    
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    const url = mode === 'edit' ? `${ENDPOINT}/${hotelId}` : ENDPOINT;
+    
+    showSpinner(`${mode === 'edit' ? 'Actualizando' : 'Creando'} hotel...`);
+    
+    const result = await fetchAPI(method, url, data, true);
+    
+    if (result.ok) {
+        showSuccess(
+            mode === 'edit' 
+                ? 'Hotel actualizado exitosamente' 
+                : 'Hotel creado exitosamente'
+        );
+        
+        setTimeout(() => {
+            location.href = '/admin/hoteles';
+        }, 1500);
+    } else {
+        const message = result.data.detail || 'Error en la operación';
+        showError(message);
+    }
+}
+
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', loadHotelData);
+</script>
+{% endblock %}

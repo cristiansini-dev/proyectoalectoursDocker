@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Editar Cliente{% else %}Nuevo Cliente{% endif %} - AlecTours Admin{% endblock %}
+
+{% block navbar_title %}{% if mode == 'edit' %}Editar Cliente{% else %}Crear Nuevo Cliente{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if mode == 'edit' %}Editar Cliente{% else %}Crear Nuevo Cliente{% endif %}</h1>
+        <p class="text-muted">Completa los datos del cliente</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-secondary" onclick="history.back()">
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i>
+                Información del Cliente
+            </div>
+            <div class="card-body">
+                <form id="clienteForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="clienteId" value="">
+                    
+                    <!-- Nombre y Apellido -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">Nombre *</label>
+                                <input type="text" id="nombre" name="nombre" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="apellido" class="form-label">Apellido *</label>
+                                <input type="text" id="apellido" name="apellido" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cédula y Email -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cedula" class="form-label">Cédula *</label>
+                                <input type="text" id="cedula" name="cedula" class="form-control" required>
+                                <small class="form-text">Debe ser única</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="correo" class="form-label">Email</label>
+                                <input type="email" id="correo" name="correo" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Celular y Fecha de Nacimiento -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="celular" class="form-label">Celular</label>
+                                <input type="tel" id="celular" name="celular" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dirección -->
+                    <div class="form-group">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control">
+                    </div>
+                    
+                    <!-- Ciudad, País -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ciudad" class="form-label">Ciudad</label>
+                                <input type="text" id="ciudad" name="ciudad" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="pais" class="form-label">País</label>
+                                <input type="text" id="pais" name="pais" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="form-group" style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            {% if mode == 'edit' %}Guardar Cambios{% else %}Crear Cliente{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group { margin-bottom: 20px; }
+.form-label { font-weight: 600; margin-bottom: 8px; display: block; }
+.form-control, .form-select { border-radius: 6px; border: 1px solid #e0e0e0; padding: 10px 15px; width: 100%; }
+.form-control:focus, .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 168, 255, 0.25); outline: none; }
+.form-text { font-size: 12px; color: #888; display: block; margin-top: 5px; }
+</style>
+
+<script>
+const ENDPOINT = '/api/clientes';
+const mode = '{{ mode }}';
+const clienteId = {{ cliente_id | default(0) }};
+
+async function loadClienteData() {
+    if (mode === 'edit' && clienteId) {
+        showSpinner('Cargando datos del cliente...');
+        
+        const result = await fetchAPI('GET', `${ENDPOINT}/${clienteId}`, null, true);
+        
+        if (result.ok) {
+            const cliente = result.data;
+            document.getElementById('clienteId').value = cliente.id_cliente;
+            document.getElementById('nombre').value = cliente.nombre;
+            document.getElementById('apellido').value = cliente.apellido;
+            document.getElementById('cedula').value = cliente.cedula;
+            document.getElementById('correo').value = cliente.correo || '';
+            document.getElementById('celular').value = cliente.celular || '';
+            document.getElementById('fechaNacimiento').value = cliente.fecha_nacimiento || '';
+            document.getElementById('direccion').value = cliente.direccion || '';
+            document.getElementById('ciudad').value = cliente.ciudad || '';
+            document.getElementById('pais').value = cliente.pais || '';
+        } else {
+            showError('Error al cargar los datos del cliente');
+            setTimeout(() => history.back(), 2000);
+        }
+    }
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('clienteForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    for (const key in data) {
+        if (data[key] === '') data[key] = null;
+    }
+    
+    const method = mode === 'edit' ? 'PUT' : 'POST';
+    const url = mode === 'edit' ? `${ENDPOINT}/${clienteId}` : ENDPOINT;
+    
+    showSpinner(`${mode === 'edit' ? 'Actualizando' : 'Creando'} cliente...`);
+    
+    const result = await fetchAPI(method, url, data, true);
+    
+    if (result.ok) {
+        showSuccess(mode === 'edit' ? 'Cliente actualizado exitosamente' : 'Cliente creado exitosamente');
+        setTimeout(() => { location.href = '/admin/clientes'; }, 1500);
+    } else {
+        const message = result.data.detail || 'Error en la operación';
+        showError(message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadClienteData);
+</script>
+{% endblock %}

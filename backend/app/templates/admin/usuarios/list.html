@@ -1,0 +1,451 @@
+{% extends "layouts/base.html" %}
+{% block title %}Usuarios - AlecTours Admin{% endblock %}
+{% block navbar_title %}Gestión de Usuarios{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Gestión de Usuarios</h1>
+        <p class="text-muted">Administra y supervisa todas las cuentas de usuario</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="openNewUserModal()">
+            <i class="bi bi-plus-circle"></i> Nuevo Usuario
+        </button>
+    </div>
+</div>
+
+<!-- FILTROS Y BÚSQUEDA -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nombre o email...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterRole">
+                    <option value="">Todos los roles</option>
+                    <option value="admin">Administrador</option>
+                    <option value="employee">Empleado</option>
+                    <option value="customer">Cliente</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="active">Activo</option>
+                    <option value="inactive">Inactivo</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS DE USUARIOS -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card stat-card-primary">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Usuarios</div>
+                    <div class="stat-value" id="stat-total-users">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-success">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Usuarios Activos</div>
+                    <div class="stat-value" id="stat-active-users">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-warning">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="bi bi-exclamation-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Inactivos</div>
+                    <div class="stat-value" id="stat-inactive-users">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-info">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Nuevos (7 días)</div>
+                    <div class="stat-value" id="stat-new-users">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLA DE USUARIOS MEJORADA -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-table"></i>
+        Lista de Usuarios
+    </div>
+    <div class="table-container">
+        <table class="table users-table" id="usuariosTable">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Último Login</th>
+                    <th>Registrado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <div class="loader" style="margin: 0 auto;"></div>
+                        <p class="mt-2">Cargando usuarios...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL PARA NUEVO USUARIO -->
+<div class="modal fade" id="newUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Crear Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newUserForm">
+                    <div class="form-group mb-3">
+                        <label for="username" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="username" placeholder="ejemplo123" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" placeholder="usuario@example.com" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" placeholder="Mínimo 8 caracteres" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="role" class="form-label">Rol</label>
+                                <select class="form-select" id="role" required>
+                                    <option value="">Selecciona un rol</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="employee">Empleado</option>
+                                    <option value="customer">Cliente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveNewUser()">
+                    <i class="bi bi-check"></i> Crear Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.users-table {
+    background: white;
+}
+
+.users-table thead {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+}
+
+.users-table th {
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 16px 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.users-table td {
+    padding: 14px 15px;
+    vertical-align: middle;
+}
+
+.users-table tbody tr {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-table tbody tr:hover {
+    background: rgba(0, 168, 255, 0.05);
+    box-shadow: inset 4px 0 0 var(--primary-color);
+}
+
+.user-avatar-col {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-email {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.role-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-admin {
+    background: rgba(0, 168, 255, 0.15);
+    color: #00a8ff;
+}
+
+.role-employee {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.role-customer {
+    background: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.user-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: var(--light-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn.delete:hover {
+    background: #dc3545;
+}
+
+.input-group-text {
+    background: var(--light-bg);
+    border-color: var(--border-color);
+}
+
+.form-control,
+.form-select {
+    border-color: var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 168, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+    .users-table {
+        font-size: 12px;
+    }
+    
+    .users-table th,
+    .users-table td {
+        padding: 10px;
+    }
+}
+</style>
+
+<script>
+let allUsers = [];
+
+// Cargar usuarios
+async function loadUsuarios() {
+    try {
+        const result = await fetchAPI('GET', '/api/usuarios?limit=100', null, false);
+        if (result.ok) {
+            allUsers = result.data || [];
+            renderUsers(allUsers);
+            updateUserStats();
+        }
+    } catch (error) {
+        console.error('Error cargando usuarios:', error);
+    }
+}
+
+// Renderizar tabla de usuarios
+function renderUsers(users) {
+    const tbody = document.querySelector('#usuariosTable tbody');
+    
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No hay usuarios disponibles</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td>
+                <div class="user-avatar-col">
+                    <img src="https://ui-avatars.com/api/?name=${u.username}&size=36&background=random" class="user-avatar-small">
+                    <div>
+                        <div class="user-name">${u.username}</div>
+                        <div class="user-email">${u.id_usuario}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${u.correo_electronico}</td>
+            <td>
+                <span class="role-badge ${u.id_cliente ? 'role-customer' : 'role-employee'}">
+                    ${u.id_cliente ? 'Cliente' : 'Empleado'}
+                </span>
+            </td>
+            <td>
+                <span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">
+                    ${u.activo ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+            <td>
+                <small>${u.ultimo_login ? new Date(u.ultimo_login).toLocaleDateString('es-ES') : 'Nunca'}</small>
+            </td>
+            <td>
+                <small>${new Date(u.fecha_creacion || Date.now()).toLocaleDateString('es-ES')}</small>
+            </td>
+            <td>
+                <div class="user-actions">
+                    <button class="action-btn" title="Ver detalles" onclick="viewUser(${u.id_usuario})">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="action-btn" title="Editar" onclick="editUser(${u.id_usuario})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="action-btn delete" title="Eliminar" onclick="deleteUser(${u.id_usuario})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Actualizar estadísticas
+function updateUserStats() {
+    const total = allUsers.length;
+    const active = allUsers.filter(u => u.activo).length;
+    const inactive = total - active;
+    
+    document.getElementById('stat-total-users').textContent = total;
+    document.getElementById('stat-active-users').textContent = active;
+    document.getElementById('stat-inactive-users').textContent = inactive;
+    document.getElementById('stat-new-users').textContent = '0'; // Implementar lógica
+}
+
+// Filtros
+document.getElementById('searchInput')?.addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    const filtered = allUsers.filter(u => 
+        u.username.toLowerCase().includes(term) || 
+        u.correo_electronico.toLowerCase().includes(term)
+    );
+    renderUsers(filtered);
+});
+
+// Funciones de acciones
+function openNewUserModal() {
+    new bootstrap.Modal(document.getElementById('newUserModal')).show();
+}
+
+function saveNewUser() {
+    // Implementar guardar nuevo usuario
+    showSuccess('Usuario creado correctamente');
+    bootstrap.Modal.getInstance(document.getElementById('newUserModal')).hide();
+}
+
+function viewUser(userId) {
+    showInfo(`Ver detalles del usuario ${userId}`);
+}
+
+function editUser(userId) {
+    showInfo(`Editar usuario ${userId}`);
+}
+
+function deleteUser(userId) {
+    showConfirm('¿Eliminar este usuario?', function() {
+        showSuccess('Usuario eliminado');
+    });
+}
+
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', loadUsuarios);
+</script>
+{% endblock %}
+

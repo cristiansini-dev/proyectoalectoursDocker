@@ -1,0 +1,615 @@
+{% extends "layouts/base.html" %}
+{% block title %}Pagos - AlecTours Admin{% endblock %}
+{% block navbar_title %}Gestión de Pagos{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Gestión de Pagos</h1>
+        <p class="text-muted">Administra todos los pagos y transacciones</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="openNewPagoModal()">
+            <i class="bi bi-plus"></i> Nuevo Pago
+        </button>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-mini">
+            <div class="stat-mini-icon">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Total Pagos</div>
+                <div class="stat-mini-value" id="totalPagos">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini success">
+            <div class="stat-mini-icon">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Completados</div>
+                <div class="stat-mini-value" id="completados">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini warning">
+            <div class="stat-mini-icon">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Pendientes</div>
+                <div class="stat-mini-value" id="pendientes">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini info">
+            <div class="stat-mini-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Monto Total</div>
+                <div class="stat-mini-value" id="montoTotal">$0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTROS -->
+<div class="card mb-4 filters-card">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar por cliente...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Estado</label>
+                <select class="form-select" id="filterEstado">
+                    <option value="">Todos</option>
+                    <option value="completado">Completado</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="fallido">Fallido</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Método</label>
+                <select class="form-select" id="filterMetodo">
+                    <option value="">Todos</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="cheque">Cheque</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-secondary w-100" onclick="resetFilters()">
+                    <i class="bi bi-arrow-clockwise"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- VISTA EN TARJETAS -->
+<div class="pagos-grid" id="pagosContainer">
+    <div class="text-center py-5" style="grid-column: 1 / -1;">
+        <div class="loader" style="margin: 0 auto;"></div>
+        <p class="mt-3">Cargando pagos...</p>
+    </div>
+</div>
+
+<!-- MODAL NUEVO PAGO -->
+<div class="modal fade" id="pagoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">
+                    <i class="bi bi-cash-coin"></i> Nuevo Pago
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="pagoForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Cliente</label>
+                                <select class="form-select" id="cliente_id" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Reserva</label>
+                                <select class="form-select" id="reserva_id" required>
+                                    <option value="">Seleccionar reserva...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="monto" placeholder="0.00" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Método de Pago</label>
+                                <select class="form-select" id="metodo_pago" required>
+                                    <option value="tarjeta">Tarjeta</option>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="transferencia">Transferencia</option>
+                                    <option value="cheque">Cheque</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" class="form-control" id="fecha_pago" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="estado">
+                                    <option value="completado">Completado</option>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="fallido">Fallido</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" id="notas" rows="3" placeholder="Notas adicionales..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="savePago()">
+                    <i class="bi bi-check"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLES -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle"></i> Detalles del Pago
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pagos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.pago-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUp 0.6s ease-out backwards;
+    border-left: 4px solid #00a8ff;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pago-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 168, 255, 0.15);
+}
+
+.pago-card.completado { border-left-color: #28a745; }
+.pago-card.pendiente { border-left-color: #ffc107; }
+.pago-card.fallido { border-left-color: #dc3545; }
+
+.pago-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pago-cliente {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.pago-monto {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.pago-body {
+    padding: 16px;
+    flex: 1;
+}
+
+.pago-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background: rgba(0, 168, 255, 0.05);
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.pago-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.status-completado {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-pendiente {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.status-fallido {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.pago-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.pago-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-view { background: rgba(0, 168, 255, 0.1); color: #00a8ff; }
+.btn-view:hover { background: rgba(0, 168, 255, 0.2); transform: translateY(-2px); }
+
+.btn-edit { background: rgba(40, 167, 69, 0.1); color: #28a745; }
+.btn-edit:hover { background: rgba(40, 167, 69, 0.2); transform: translateY(-2px); }
+
+.btn-delete { background: rgba(220, 53, 69, 0.1); color: #dc3545; }
+.btn-delete:hover { background: rgba(220, 53, 69, 0.2); transform: translateY(-2px); }
+
+.stat-mini {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #00a8ff;
+}
+
+.stat-mini.success { border-left-color: #28a745; }
+.stat-mini.warning { border-left-color: #ffc107; }
+.stat-mini.info { border-left-color: #17a2b8; }
+
+.stat-mini-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 168, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-mini.success .stat-mini-icon { color: #28a745; background: rgba(40, 167, 69, 0.1); }
+.stat-mini.warning .stat-mini-icon { color: #ffc107; background: rgba(255, 193, 7, 0.15); }
+.stat-mini.info .stat-mini-icon { color: #17a2b8; background: rgba(23, 162, 184, 0.1); }
+
+.stat-mini-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+.stat-mini-value { font-size: 24px; font-weight: bold; color: var(--text-primary); }
+
+.filters-card { background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); border: none; }
+
+.loader {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--light-bg);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .pagos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+const ENDPOINT = '/api/pagos';
+let allPagos = [];
+let currentPagoId = null;
+
+function openNewPagoModal() {
+    currentPagoId = null;
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-cash-coin"></i> Nuevo Pago';
+    document.getElementById('pagoForm').reset();
+    new bootstrap.Modal(document.getElementById('pagoModal')).show();
+}
+
+async function savePago() {
+    const formData = {
+        cliente_id: parseInt(document.getElementById('cliente_id').value),
+        reserva_id: parseInt(document.getElementById('reserva_id').value),
+        monto: parseFloat(document.getElementById('monto').value),
+        metodo_pago: document.getElementById('metodo_pago').value,
+        fecha_pago: document.getElementById('fecha_pago').value,
+        estado: document.getElementById('estado').value,
+        notas: document.getElementById('notas').value
+    };
+
+    const method = currentPagoId ? 'PUT' : 'POST';
+    const url = currentPagoId ? `${ENDPOINT}/${currentPagoId}` : ENDPOINT;
+
+    const result = await fetchAPI(method, url, formData);
+    if (result.ok) {
+        showSuccess(currentPagoId ? 'Pago actualizado' : 'Pago registrado exitosamente');
+        bootstrap.Modal.getInstance(document.getElementById('pagoModal')).hide();
+        await loadPagos();
+    } else {
+        showError(result.data.detail || 'Error al guardar');
+    }
+}
+
+function viewPagoDetails(pagoId) {
+    const pago = allPagos.find(p => p.id_pago === pagoId);
+    if (!pago) return;
+
+    const fecha = new Date(pago.fecha_pago);
+
+    const html = `
+        <div style="margin-bottom: 20px;">
+            <div style="font-size: 32px; font-weight: bold; color: #28a745; margin-bottom: 15px;">$${parseFloat(pago.monto).toFixed(2)}</div>
+            <span class="badge" style="background-color: ${pago.estado === 'completado' ? '#28a745' : pago.estado === 'pendiente' ? '#ffc107' : '#dc3545'}; color: white; font-size: 12px; padding: 6px 12px;">${pago.estado.toUpperCase()}</span>
+        </div>
+
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Cliente</div>
+                    <div style="font-size: 13px; color: var(--text-primary); font-weight: bold;">${pago.cliente?.nombre || '-'}</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Fecha</div>
+                    <div style="font-size: 13px; color: var(--text-primary);">${fecha.toLocaleDateString('es-ES')}</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-credit-card"></i> Método</div>
+                <div style="font-size: 13px; color: var(--text-primary);">${pago.metodo_pago}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-ticket"></i> Reserva</div>
+                <div style="font-size: 13px; color: var(--text-primary);">Res #${pago.reserva_id}</div>
+            </div>
+        </div>
+
+        ${pago.notas ? `
+            <div style="background: rgba(0, 168, 255, 0.1); padding: 12px; border-radius: 8px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Notas</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${pago.notas}</div>
+            </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('detailsContent').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+}
+
+function editPago(pagoId) {
+    const pago = allPagos.find(p => p.id_pago === pagoId);
+    if (!pago) return;
+
+    currentPagoId = pagoId;
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-circle"></i> Editar Pago';
+    document.getElementById('cliente_id').value = pago.cliente_id;
+    document.getElementById('reserva_id').value = pago.reserva_id;
+    document.getElementById('monto').value = pago.monto;
+    document.getElementById('metodo_pago').value = pago.metodo_pago;
+    document.getElementById('fecha_pago').value = pago.fecha_pago.split('T')[0];
+    document.getElementById('estado').value = pago.estado;
+    document.getElementById('notas').value = pago.notas || '';
+
+    new bootstrap.Modal(document.getElementById('pagoModal')).show();
+}
+
+function deletePago(pagoId) {
+    showConfirm('¿Eliminar este pago?', async () => {
+        const result = await fetchAPI('DELETE', `${ENDPOINT}/${pagoId}`, null);
+        if (result.ok) {
+            showSuccess('Pago eliminado');
+            await loadPagos();
+        } else {
+            showError(result.data.detail || 'Error al eliminar');
+        }
+    });
+}
+
+async function loadPagos() {
+    const result = await fetchAPI('GET', `${ENDPOINT}?limit=100`, null);
+    
+    if (result.ok) {
+        allPagos = result.data || [];
+        renderPagos();
+        updateStats();
+    }
+}
+
+function renderPagos() {
+    const container = document.getElementById('pagosContainer');
+    
+    if (allPagos.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-center py-5;">
+                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                <p class="mt-3 text-muted">No hay pagos registrados</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = allPagos.map((p, idx) => {
+        const fecha = new Date(p.fecha_pago);
+        
+        return `
+            <div class="pago-card ${p.estado}" style="animation-delay: ${idx * 0.1}s">
+                <div class="pago-header">
+                    <div class="pago-cliente">${p.cliente?.nombre || 'Cliente'}</div>
+                    <div class="pago-monto">$${parseFloat(p.monto).toFixed(2)}</div>
+                </div>
+                <div class="pago-body">
+                    <div class="pago-status status-${p.estado}">${p.estado.toUpperCase()}</div>
+                    
+                    <div class="pago-info">
+                        <div class="info-row">
+                            <span class="info-label"><i class="bi bi-calendar"></i> Fecha</span>
+                            <span class="info-value">${fecha.toLocaleDateString('es-ES')}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="bi bi-credit-card"></i> Método</span>
+                            <span class="info-value">${p.metodo_pago}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="bi bi-ticket"></i> Reserva</span>
+                            <span class="info-value">#${p.reserva_id}</span>
+                        </div>
+                    </div>
+
+                    <div class="pago-actions">
+                        <button class="pago-btn btn-view" onclick="viewPagoDetails(${p.id_pago})">
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <button class="pago-btn btn-edit" onclick="editPago(${p.id_pago})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="pago-btn btn-delete" onclick="deletePago(${p.id_pago})">
+                            <i class="bi bi-trash"></i> Borrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateStats() {
+    const total = allPagos.length;
+    const completados = allPagos.filter(p => p.estado === 'completado').length;
+    const pendientes = allPagos.filter(p => p.estado === 'pendiente').length;
+    const monto = allPagos.reduce((sum, p) => sum + (parseFloat(p.monto || 0)), 0);
+
+    document.getElementById('totalPagos').textContent = total;
+    document.getElementById('completados').textContent = completados;
+    document.getElementById('pendientes').textContent = pendientes;
+    document.getElementById('montoTotal').textContent = `$${monto.toFixed(2)}`;
+}
+
+document.getElementById('searchInput')?.addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    const filtered = allPagos.filter(p =>
+        (p.cliente?.nombre && p.cliente.nombre.toLowerCase().includes(term))
+    );
+    
+    allPagos = filtered;
+    renderPagos();
+});
+
+window.resetFilters = function() {
+    location.reload();
+};
+
+document.addEventListener('DOMContentLoaded', loadPagos);
+</script>
+{% endblock %}

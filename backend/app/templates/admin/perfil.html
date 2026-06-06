@@ -1,0 +1,368 @@
+{% extends "layouts/base.html" %}
+{% block title %}Mi Perfil - AlecTours Admin{% endblock %}
+{% block navbar_title %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Mi Perfil</h1>
+        <p class="text-muted">Gestiona tu información personal</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- FOTO Y INFORMACIÓN BÁSICA -->
+    <div class="col-lg-4">
+        <div class="card profile-card">
+            <div class="profile-header">
+                <img src="https://ui-avatars.com/api/?name=Admin&size=120&background=random" alt="Avatar" class="profile-avatar">
+            </div>
+            <div class="card-body profile-info">
+                <h3 id="profile-name">Cargando...</h3>
+                <p id="profile-role" class="text-muted mb-3">Administrador</p>
+                
+                <div class="profile-stat-item">
+                    <span class="profile-stat-label">Correo Electrónico</span>
+                    <p id="profile-email">admin@alectours.com</p>
+                </div>
+                
+                <div class="profile-stat-item">
+                    <span class="profile-stat-label">Teléfono</span>
+                    <p id="profile-phone">+1 (555) 000-0000</p>
+                </div>
+                
+                <div class="profile-stat-item">
+                    <span class="profile-stat-label">Miembro Desde</span>
+                    <p id="profile-joined">Enero 2024</p>
+                </div>
+                
+                <div class="profile-stat-item">
+                    <span class="profile-stat-label">Estado</span>
+                    <p>
+                        <span class="badge badge-success">Activo</span>
+                    </p>
+                </div>
+                
+                <button class="btn btn-primary w-100 mt-4" onclick="location.href='/admin/editar-perfil'">
+                    <i class="bi bi-pencil"></i> Editar Perfil
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FORMULARIO DE CAMBIO DE CONTRASEÑA -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lock"></i>
+                Cambiar Contraseña
+            </div>
+            <div class="card-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword" class="form-label">Contraseña Actual</label>
+                        <input type="password" class="form-control" id="currentPassword" placeholder="Ingresa tu contraseña actual" required>
+                        <small class="form-text">Por seguridad, requiere tu contraseña actual</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="newPassword" class="form-label">Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="newPassword" placeholder="Mínimo 8 caracteres" required>
+                                <small class="form-text">Usa números, mayúsculas y caracteres especiales</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirma tu nueva contraseña" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="strength-bar"></div>
+                        <small id="strengthText">Fortaleza: Débil</small>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Cambiar Contraseña
+                        </button>
+                        <button type="reset" class="btn btn-secondary ms-2">
+                            <i class="bi bi-x"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- RESTABLECER CONTRASEÑA -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-shield-lock"></i>
+                Restablecer Contraseña
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Si olvidaste tu contraseña, podemos enviarte un enlace de restablecimiento a tu correo electrónico.</p>
+                <button class="btn btn-outline-primary" onclick="requestPasswordReset()">
+                    <i class="bi bi-envelope"></i> Enviar Enlace de Restablecimiento
+                </button>
+                <div id="resetMessage" style="display:none;" class="alert alert-info mt-3">
+                    Se ha enviado un enlace de restablecimiento a <strong id="resetEmail"></strong>. Revisa tu correo en los próximos 10 minutos.
+                </div>
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-shield-check"></i>
+                Sesiones Activas
+            </div>
+            <div class="card-body">
+                <div class="sessions-list">
+                    <div class="session-item">
+                        <div class="session-info">
+                            <div class="session-device">
+                                <i class="bi bi-laptop"></i>
+                                <strong>Chrome en Windows</strong>
+                            </div>
+                            <small class="text-muted">IP: 192.168.1.100 · Última actividad: Hace 2 minutos</small>
+                        </div>
+                        <span class="badge badge-success">Actual</span>
+                    </div>
+                    
+                    <div class="session-item">
+                        <div class="session-info">
+                            <div class="session-device">
+                                <i class="bi bi-phone"></i>
+                                <strong>Safari en iPhone</strong>
+                            </div>
+                            <small class="text-muted">IP: 192.168.1.101 · Última actividad: Hace 1 hora</small>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="revokeSession(this)">Cerrar</button>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-top">
+                    <button class="btn btn-outline-danger btn-sm">Cerrar Todas las Sesiones</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* TARJETA DE PERFIL */
+.profile-card {
+    text-align: center;
+    overflow: hidden;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #00a8ff 0%, #0088cc 100%);
+    padding: 30px 20px 20px;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.profile-info h3 {
+    margin: 20px 0 5px;
+    color: var(--text-primary);
+}
+
+.profile-stat-item {
+    text-align: left;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-stat-item:last-child {
+    border-bottom: none;
+}
+
+.profile-stat-label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: bold;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+}
+
+.profile-stat-item p {
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* PASSWORD STRENGTH */
+.password-strength {
+    margin: 15px 0;
+}
+
+.strength-bar {
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.strength-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    background: #dc3545;
+    width: 0%;
+    transition: all 0.3s ease;
+}
+
+#newPassword:valid ~ .password-strength .strength-bar::after {
+    width: 75%;
+    background: #28a745;
+}
+
+/* SESIONES */
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--light-bg);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.session-device {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.session-device i {
+    font-size: 20px;
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .session-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+
+<script>
+// Cargar datos del perfil
+async function loadProfileData() {
+    try {
+        // Simular carga de datos (en producción, esto vendría de un endpoint)
+        document.getElementById('profile-name').textContent = 'Administrador';
+        document.getElementById('profile-email').textContent = 'admin@alectours.com';
+        document.getElementById('profile-phone').textContent = '+1 (555) 000-0000';
+        document.getElementById('profile-joined').textContent = 'Enero 2024';
+    } catch (error) {
+        console.error('Error cargando perfil:', error);
+    }
+}
+
+// Validar fortaleza de contraseña
+document.getElementById('newPassword')?.addEventListener('input', function() {
+    const password = this.value;
+    let strength = 0;
+    let text = 'Muy Débil';
+    
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[!@#$%^&*]/.test(password)) strength++;
+    
+    const colors = ['#dc3545', '#ffc107', '#17a2b8', '#28a745'];
+    const texts = ['Muy Débil', 'Débil', 'Buena', 'Fuerte'];
+    
+    document.getElementById('strengthText').textContent = 'Fortaleza: ' + texts[strength];
+    const bar = document.querySelector('.strength-bar');
+    if (bar) {
+        bar.style.background = colors[strength];
+        bar.style.width = ((strength + 1) * 25) + '%';
+    }
+});
+
+// Cambiar contraseña
+document.getElementById('changePasswordForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showError('Las contraseñas no coinciden');
+        return;
+    }
+    
+    try {
+        const result = await fetchAPI('POST', '/api/auth/change-password', {
+            current_password: currentPassword,
+            new_password: newPassword
+        });
+        
+        if (result.ok) {
+            showSuccess('Contraseña actualizada correctamente');
+            this.reset();
+        } else {
+            showError(result.data.detail || 'Error al cambiar la contraseña');
+        }
+    } catch (error) {
+        showError('Error al cambiar la contraseña');
+    }
+});
+
+// Revocar sesión
+function revokeSession(btn) {
+    showConfirm('¿Cerrar esta sesión?', function() {
+        btn.closest('.session-item').style.opacity = '0.5';
+        setTimeout(() => {
+            btn.closest('.session-item').remove();
+            showSuccess('Sesión cerrada');
+        }, 300);
+    });
+}
+
+// Solicitar restablecimiento de contraseña
+async function requestPasswordReset() {
+    try {
+        const result = await fetchAPI('POST', '/api/auth/request-password-reset', {});
+        
+        if (result.ok) {
+            const email = document.getElementById('profile-email').textContent;
+            document.getElementById('resetEmail').textContent = email;
+            document.getElementById('resetMessage').style.display = 'block';
+            showSuccess('Enlace de restablecimiento enviado');
+        } else {
+            showError(result.data.detail || 'Error al solicitar restablecimiento');
+        }
+    } catch (error) {
+        showError('Error al solicitar restablecimiento');
+        console.error('Error:', error);
+    }
+}
+
+// Cargar datos al iniciar
+document.addEventListener('DOMContentLoaded', loadProfileData);
+</script>
+{% endblock %}

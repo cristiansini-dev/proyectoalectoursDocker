@@ -1,0 +1,100 @@
+<!-- Modal Genérico Reutilizable -->
+<div class="modal fade" id="genericModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Modal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="modalActionBtn" onclick="handleModalAction()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-content {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    border-radius: 0 0 10px 10px;
+}
+
+.btn-primary {
+    background: #00a8ff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #0088cc;
+}
+
+.btn-secondary {
+    background: #e0e0e0;
+    border: none;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+    color: #333;
+}
+</style>
+
+<script>
+// Variables globales para manejo de modales
+let currentModalData = null;
+let currentModalMode = null;
+
+// Abrir modal genérico
+function openModal(title, content, actionText = 'Guardar', onAction = null) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = content;
+    document.getElementById('modalActionBtn').textContent = actionText;
+    
+    currentModalData = onAction;
+    
+    const modal = new bootstrap.Modal(document.getElementById('genericModal'));
+    modal.show();
+}
+
+// Manejar acción del modal
+function handleModalAction() {
+    if (typeof currentModalData === 'function') {
+        currentModalData();
+    }
+}
+
+// Cerrar modal
+function closeModal() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('genericModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+</script>

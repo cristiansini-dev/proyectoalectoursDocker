@@ -1,0 +1,715 @@
+{% extends "layouts/base.html" %}
+{% block title %}Reservas - AlecTours Admin{% endblock %}
+{% block navbar_title %}Gestión de Reservas{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Gestión de Reservas</h1>
+        <p class="text-muted">Administra todas las reservas y bookings</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="openNewReservaModal()">
+            <i class="bi bi-plus"></i> Nueva Reserva
+        </button>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-mini">
+            <div class="stat-mini-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Total Reservas</div>
+                <div class="stat-mini-value" id="totalReservas">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini success">
+            <div class="stat-mini-icon">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Confirmadas</div>
+                <div class="stat-mini-value" id="confirmadas">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini warning">
+            <div class="stat-mini-icon">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Pendientes</div>
+                <div class="stat-mini-value" id="pendientes">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini info">
+            <div class="stat-mini-icon">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="stat-mini-content">
+                <div class="stat-mini-label">Ingresos Totales</div>
+                <div class="stat-mini-value" id="ingresos">$0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTROS -->
+<div class="card mb-4 filters-card">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar por cliente...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Estado</label>
+                <select class="form-select" id="filterEstado">
+                    <option value="">Todos</option>
+                    <option value="confirmada">Confirmada</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Fecha</label>
+                <input type="date" id="filterFecha" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-secondary w-100" onclick="resetFilters()">
+                    <i class="bi bi-arrow-clockwise"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- VISTA EN TARJETAS -->
+<div class="reservas-grid" id="reservasContainer">
+    <div class="text-center py-5">
+        <div class="loader" style="margin: 0 auto;"></div>
+        <p class="mt-3">Cargando reservas...</p>
+    </div>
+</div>
+
+<!-- MODAL NUEVA RESERVA -->
+<div class="modal fade" id="reservaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">
+                    <i class="bi bi-calendar-plus"></i> Nueva Reserva
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reservaForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Cliente</label>
+                                <select class="form-select" id="cliente_id" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Habitación</label>
+                                <select class="form-select" id="habitacion_id" required>
+                                    <option value="">Seleccionar habitación...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Fecha Inicio</label>
+                                <input type="date" class="form-control" id="fecha_inicio" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Fecha Fin</label>
+                                <input type="date" class="form-control" id="fecha_fin" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Costo Total</label>
+                                <input type="number" class="form-control" id="total_costo" placeholder="0.00" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="estado">
+                                    <option value="confirmada">Confirmada</option>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="cancelada">Cancelada</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" id="notas" rows="3" placeholder="Notas adicionales..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveReserva()">
+                    <i class="bi bi-check"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLES -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle"></i> Detalles de Reserva
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.reservas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.reserva-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUp 0.6s ease-out backwards;
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid #00a8ff;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.reserva-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 168, 255, 0.15);
+}
+
+.reserva-card.confirmada {
+    border-left-color: #28a745;
+}
+
+.reserva-card.pendiente {
+    border-left-color: #ffc107;
+}
+
+.reserva-card.cancelada {
+    border-left-color: #dc3545;
+}
+
+.reserva-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.reserva-id {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.reserva-cliente {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.reserva-body {
+    padding: 16px;
+    flex: 1;
+}
+
+.reserva-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: rgba(0, 168, 255, 0.05);
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.reserva-timeline {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.timeline-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.timeline-marker {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.timeline-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.timeline-date {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.reserva-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    width: 100%;
+    text-align: center;
+}
+
+.status-confirmada {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-pendiente {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.status-cancelada {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.reserva-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.reserva-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.btn-view {
+    background: rgba(0, 168, 255, 0.1);
+    color: #00a8ff;
+}
+
+.btn-view:hover {
+    background: rgba(0, 168, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-edit {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.btn-edit:hover {
+    background: rgba(40, 167, 69, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.btn-delete:hover {
+    background: rgba(220, 53, 69, 0.2);
+    transform: translateY(-2px);
+}
+
+.stat-mini {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #00a8ff;
+}
+
+.stat-mini.success { border-left-color: #28a745; }
+.stat-mini.warning { border-left-color: #ffc107; }
+.stat-mini.info { border-left-color: #17a2b8; }
+
+.stat-mini-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 168, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-mini.success .stat-mini-icon {
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.stat-mini.warning .stat-mini-icon {
+    color: #ffc107;
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.stat-mini.info .stat-mini-icon {
+    color: #17a2b8;
+    background: rgba(23, 162, 184, 0.1);
+}
+
+.stat-mini-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.stat-mini-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.filters-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border: none;
+}
+
+.loader {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--light-bg);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .reservas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+const ENDPOINT = '/api/reservas';
+let allReservas = [];
+let currentReservaId = null;
+
+function openNewReservaModal() {
+    currentReservaId = null;
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-calendar-plus"></i> Nueva Reserva';
+    document.getElementById('reservaForm').reset();
+    new bootstrap.Modal(document.getElementById('reservaModal')).show();
+}
+
+async function saveReserva() {
+    const formData = {
+        cliente_id: parseInt(document.getElementById('cliente_id').value),
+        habitacion_id: parseInt(document.getElementById('habitacion_id').value),
+        fecha_inicio: document.getElementById('fecha_inicio').value,
+        fecha_fin: document.getElementById('fecha_fin').value,
+        total_costo: parseFloat(document.getElementById('total_costo').value),
+        estado: document.getElementById('estado').value,
+        notas: document.getElementById('notas').value
+    };
+
+    const method = currentReservaId ? 'PUT' : 'POST';
+    const url = currentReservaId ? `${ENDPOINT}/${currentReservaId}` : ENDPOINT;
+
+    const result = await fetchAPI(method, url, formData);
+    if (result.ok) {
+        showSuccess(currentReservaId ? 'Reserva actualizada' : 'Reserva creada exitosamente');
+        bootstrap.Modal.getInstance(document.getElementById('reservaModal')).hide();
+        await loadReservas();
+    } else {
+        showError(result.data.detail || 'Error al guardar');
+    }
+}
+
+function viewReservaDetails(reservaId) {
+    const reserva = allReservas.find(r => r.id_reserva === reservaId);
+    if (!reserva) return;
+
+    const inicioDate = new Date(reserva.fecha_inicio);
+    const finDate = new Date(reserva.fecha_fin);
+    const noches = Math.ceil((finDate - inicioDate) / (1000 * 60 * 60 * 24));
+
+    const html = `
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold;">Cliente</div>
+                    <div style="font-size: 16px; font-weight: bold; color: var(--text-primary);">${reserva.cliente?.nombre || '-'}</div>
+                </div>
+                <div>
+                    <span class="badge badge-${reserva.estado}">${reserva.estado}</span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Inicio</div>
+                    <div style="font-size: 14px; color: var(--text-primary); font-weight: bold;">${inicioDate.toLocaleDateString('es-ES')}</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Fin</div>
+                    <div style="font-size: 14px; color: var(--text-primary); font-weight: bold;">${finDate.toLocaleDateString('es-ES')}</div>
+                </div>
+            </div>
+
+            <div style="background: rgba(0, 168, 255, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Duración</div>
+                <div style="font-size: 16px; color: var(--primary-color); font-weight: bold;">${noches} noches</div>
+            </div>
+
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 10px;">Costo</div>
+                <div style="font-size: 24px; font-weight: bold; color: #28a745;">$${parseFloat(reserva.total_costo || 0).toFixed(2)}</div>
+            </div>
+
+            ${reserva.notas ? `
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Notas</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">${reserva.notas}</div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('detailsContent').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+}
+
+function editReserva(reservaId) {
+    const reserva = allReservas.find(r => r.id_reserva === reservaId);
+    if (!reserva) return;
+
+    currentReservaId = reservaId;
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-circle"></i> Editar Reserva';
+    document.getElementById('cliente_id').value = reserva.cliente_id;
+    document.getElementById('habitacion_id').value = reserva.habitacion_id;
+    document.getElementById('fecha_inicio').value = reserva.fecha_inicio.split('T')[0];
+    document.getElementById('fecha_fin').value = reserva.fecha_fin.split('T')[0];
+    document.getElementById('total_costo').value = reserva.total_costo;
+    document.getElementById('estado').value = reserva.estado;
+    document.getElementById('notas').value = reserva.notas || '';
+
+    new bootstrap.Modal(document.getElementById('reservaModal')).show();
+}
+
+function deleteReserva(reservaId) {
+    showConfirm('¿Cancelar esta reserva?', async () => {
+        const result = await fetchAPI('DELETE', `${ENDPOINT}/${reservaId}`, null);
+        if (result.ok) {
+            showSuccess('Reserva cancelada');
+            await loadReservas();
+        } else {
+            showError(result.data.detail || 'Error al cancelar');
+        }
+    });
+}
+
+async function loadReservas() {
+    const result = await fetchAPI('GET', `${ENDPOINT}?limit=100`, null);
+    
+    if (result.ok) {
+        allReservas = result.data || [];
+        renderReservas();
+        updateStats();
+    }
+}
+
+function renderReservas() {
+    const container = document.getElementById('reservasContainer');
+    
+    if (allReservas.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-center py-5;">
+                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                <p class="mt-3 text-muted">No hay reservas registradas</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = allReservas.map((r, idx) => {
+        const inicio = new Date(r.fecha_inicio);
+        const fin = new Date(r.fecha_fin);
+        const noches = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
+        
+        return `
+            <div class="reserva-card ${r.estado}" style="animation-delay: ${idx * 0.1}s">
+                <div class="reserva-header">
+                    <div class="reserva-id">Reserva #${r.id_reserva}</div>
+                    <div class="reserva-cliente">${r.cliente?.nombre || 'Cliente'}</div>
+                </div>
+                <div class="reserva-body">
+                    <div class="reserva-status status-${r.estado}">${r.estado.toUpperCase()}</div>
+                    
+                    <div class="reserva-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-text">
+                                <div class="timeline-date">${inicio.toLocaleDateString('es-ES')}</div>
+                                <div>Inicio</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background: #28a745;"></div>
+                            <div class="timeline-text">
+                                <div class="timeline-date">${fin.toLocaleDateString('es-ES')}</div>
+                                <div>${noches} noches</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reserva-info">
+                        <div class="info-row">
+                            <span class="info-label"><i class="bi bi-door-closed"></i> Habitación</span>
+                            <span class="info-value">Hab ${r.habitacion?.numero_habitacion || '-'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="bi bi-cash-coin"></i> Total</span>
+                            <span class="info-value">$${parseFloat(r.total_costo || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <div class="reserva-actions">
+                        <button class="reserva-btn btn-view" onclick="viewReservaDetails(${r.id_reserva})">
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <button class="reserva-btn btn-edit" onclick="editReserva(${r.id_reserva})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="reserva-btn btn-delete" onclick="deleteReserva(${r.id_reserva})">
+                            <i class="bi bi-trash"></i> Borrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateStats() {
+    const total = allReservas.length;
+    const confirmadas = allReservas.filter(r => r.estado === 'confirmada').length;
+    const pendientes = allReservas.filter(r => r.estado === 'pendiente').length;
+    const ingresos = allReservas.reduce((sum, r) => sum + (parseFloat(r.total_costo || 0)), 0);
+
+    document.getElementById('totalReservas').textContent = total;
+    document.getElementById('confirmadas').textContent = confirmadas;
+    document.getElementById('pendientes').textContent = pendientes;
+    document.getElementById('ingresos').textContent = `$${ingresos.toFixed(2)}`;
+}
+
+document.getElementById('searchInput')?.addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    const filtered = allReservas.filter(r =>
+        (r.cliente?.nombre && r.cliente.nombre.toLowerCase().includes(term))
+    );
+    
+    allReservas = filtered;
+    renderReservas();
+});
+
+window.resetFilters = function() {
+    location.reload();
+};
+
+document.addEventListener('DOMContentLoaded', loadReservas);
+</script>
+{% endblock %}
