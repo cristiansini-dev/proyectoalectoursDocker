@@ -481,206 +481,522 @@
 
 <script>
 const ENDPOINT = '/api/empleados';
+
 let allEmpleados = [];
+let filteredEmpleados = [];
 let currentEmpleadoId = null;
 
+/* =========================================
+   NUEVO EMPLEADO
+========================================= */
 function openNewEmpleadoModal() {
+
     currentEmpleadoId = null;
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-person-plus"></i> Nuevo Empleado';
+
+    document.getElementById('modalTitle').innerHTML =
+        '<i class="bi bi-person-plus"></i> Nuevo Empleado';
+
     document.getElementById('empleadoForm').reset();
-    new bootstrap.Modal(document.getElementById('empleadoModal')).show();
+
+    new bootstrap.Modal(
+        document.getElementById('empleadoModal')
+    ).show();
 }
 
+/* =========================================
+   GUARDAR EMPLEADO
+========================================= */
 async function saveEmpleado() {
+
     const formData = {
         nombre: document.getElementById('nombre').value,
         apellido: document.getElementById('apellido').value,
-        correo: document.getElementById('correo').value,
-        celular: document.getElementById('celular').value,
-        rol: document.getElementById('rol').value,
-        hotel_id: parseInt(document.getElementById('hotel_id').value),
-        fecha_contratacion: document.getElementById('fecha_contratacion').value,
-        estado: document.getElementById('estado').value
+
+        correo_electronico:
+            document.getElementById('correo').value,
+
+        celular:
+            document.getElementById('celular').value,
+
+        fecha_contratacion:
+            document.getElementById('fecha_contratacion').value,
+
+        activo:
+            document.getElementById('estado').value === 'activo'
     };
 
-    const method = currentEmpleadoId ? 'PUT' : 'POST';
-    const url = currentEmpleadoId ? `${ENDPOINT}/${currentEmpleadoId}` : ENDPOINT;
+    const method =
+        currentEmpleadoId ? 'PUT' : 'POST';
 
-    const result = await fetchAPI(method, url, formData);
-    if (result.ok) {
-        showSuccess(currentEmpleadoId ? 'Empleado actualizado' : 'Empleado creado exitosamente');
-        bootstrap.Modal.getInstance(document.getElementById('empleadoModal')).hide();
-        await loadEmpleados();
-    } else {
-        showError(result.data.detail || 'Error al guardar');
+    const url =
+        currentEmpleadoId
+            ? `${ENDPOINT}/${currentEmpleadoId}`
+            : ENDPOINT;
+
+    try {
+
+        const result = await fetchAPI(
+            method,
+            url,
+            formData
+        );
+
+        if (result.ok) {
+
+            showSuccess(
+                currentEmpleadoId
+                    ? 'Empleado actualizado'
+                    : 'Empleado creado exitosamente'
+            );
+
+            bootstrap.Modal
+                .getInstance(
+                    document.getElementById('empleadoModal')
+                )
+                .hide();
+
+            await loadEmpleados();
+
+        } else {
+
+            showError(
+                result.data?.detail ||
+                'Error al guardar'
+            );
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError('Error de conexión');
     }
 }
 
+/* =========================================
+   VER DETALLES
+========================================= */
 function viewEmpleadoDetails(empleadoId) {
-    const empleado = allEmpleados.find(e => e.id_empleado === empleadoId);
+
+    const empleado = allEmpleados.find(
+        e => e.id_empleado === empleadoId
+    );
+
     if (!empleado) return;
 
-    const fecha = new Date(empleado.fecha_contratacion);
-    const hoy = new Date();
-    const dias = Math.floor((hoy - fecha) / (1000 * 60 * 60 * 24));
-    const anos = Math.floor(dias / 365);
+    const fecha =
+        empleado.fecha_contratacion
+            ? new Date(empleado.fecha_contratacion)
+            : null;
 
     const html = `
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 48px; margin-bottom: 10px;">👤</div>
-            <div style="font-size: 18px; font-weight: bold; color: var(--text-primary);">${empleado.nombre} ${empleado.apellido}</div>
-            <div style="font-size: 14px; color: #17a2b8; font-weight: 600; margin-bottom: 15px;">${empleado.rol.toUpperCase()}</div>
-            <span class="badge" style="background-color: ${empleado.estado === 'activo' ? '#28a745' : '#dc3545'}; color: white;">${empleado.estado}</span>
-        </div>
+        <div style="text-align:center;margin-bottom:20px;">
 
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-envelope"></i> Email</div>
-                    <div style="font-size: 13px; color: var(--text-primary);">${empleado.correo}</div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-telephone"></i> Teléfono</div>
-                    <div style="font-size: 13px; color: var(--text-primary);">${empleado.celular || '-'}</div>
-                </div>
+            <div style="font-size:48px;margin-bottom:10px;">
+                👤
             </div>
+
+            <div style="
+                font-size:20px;
+                font-weight:bold;
+                color:var(--text-primary);
+            ">
+                ${empleado.nombre} ${empleado.apellido}
+            </div>
+
+            <div style="
+                font-size:14px;
+                color:#17a2b8;
+                margin-top:5px;
+            ">
+                ${empleado.correo_electronico || 'Sin correo'}
+            </div>
+
+            <span class="
+                empleado-status
+                status-${empleado.activo ? 'activo' : 'inactivo'}
+            ">
+                ${empleado.activo ? 'ACTIVO' : 'INACTIVO'}
+            </span>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-building"></i> Hotel</div>
-            <div style="font-size: 13px; color: var(--text-primary);">${empleado.hotel?.nombre || '-'}</div>
-        </div>
+        <div class="empleado-info">
 
-        <div style="background: rgba(23, 162, 184, 0.1); padding: 12px; border-radius: 8px;">
-            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-calendar-check"></i> Antigüedad</div>
-            <div style="font-size: 16px; font-weight: bold; color: #17a2b8;">${anos} años</div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Desde ${fecha.toLocaleDateString('es-ES')}</div>
+            <div class="info-item">
+                <i class="bi bi-telephone"></i>
+
+                <span>
+                    ${empleado.celular || 'Sin teléfono'}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <i class="bi bi-calendar-check"></i>
+
+                <span>
+                    ${
+                        fecha
+                            ? fecha.toLocaleDateString('es-CO')
+                            : 'Sin fecha'
+                    }
+                </span>
+            </div>
+
+            <div class="info-item">
+                <i class="bi bi-check-circle"></i>
+
+                <span>
+                    ${
+                        empleado.activo
+                            ? 'Empleado activo'
+                            : 'Empleado inactivo'
+                    }
+                </span>
+            </div>
+
         </div>
     `;
-    
-    document.getElementById('detailsContent').innerHTML = html;
-    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+
+    document.getElementById(
+        'detailsContent'
+    ).innerHTML = html;
+
+    new bootstrap.Modal(
+        document.getElementById('detailsModal')
+    ).show();
 }
 
+/* =========================================
+   EDITAR EMPLEADO
+========================================= */
 function editEmpleado(empleadoId) {
-    const empleado = allEmpleados.find(e => e.id_empleado === empleadoId);
+
+    const empleado = allEmpleados.find(
+        e => e.id_empleado === empleadoId
+    );
+
     if (!empleado) return;
 
     currentEmpleadoId = empleadoId;
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-circle"></i> Editar Empleado';
-    document.getElementById('nombre').value = empleado.nombre;
-    document.getElementById('apellido').value = empleado.apellido;
-    document.getElementById('correo').value = empleado.correo;
-    document.getElementById('celular').value = empleado.celular || '';
-    document.getElementById('rol').value = empleado.rol;
-    document.getElementById('hotel_id').value = empleado.hotel_id;
-    document.getElementById('fecha_contratacion').value = empleado.fecha_contratacion.split('T')[0];
-    document.getElementById('estado').value = empleado.estado;
 
-    new bootstrap.Modal(document.getElementById('empleadoModal')).show();
+    document.getElementById('modalTitle').innerHTML =
+        '<i class="bi bi-pencil-circle"></i> Editar Empleado';
+
+    document.getElementById('nombre').value =
+        empleado.nombre || '';
+
+    document.getElementById('apellido').value =
+        empleado.apellido || '';
+
+    document.getElementById('correo').value =
+        empleado.correo_electronico || '';
+
+    document.getElementById('celular').value =
+        empleado.celular || '';
+
+    document.getElementById('fecha_contratacion').value =
+        empleado.fecha_contratacion
+            ? empleado.fecha_contratacion.split('T')[0]
+            : '';
+
+    document.getElementById('estado').value =
+        empleado.activo
+            ? 'activo'
+            : 'inactivo';
+
+    new bootstrap.Modal(
+        document.getElementById('empleadoModal')
+    ).show();
 }
 
+/* =========================================
+   ELIMINAR EMPLEADO
+========================================= */
 function deleteEmpleado(empleadoId) {
-    showConfirm('¿Eliminar este empleado?', async () => {
-        const result = await fetchAPI('DELETE', `${ENDPOINT}/${empleadoId}`, null);
-        if (result.ok) {
-            showSuccess('Empleado eliminado');
-            await loadEmpleados();
-        } else {
-            showError(result.data.detail || 'Error al eliminar');
+
+    showConfirm(
+        '¿Eliminar este empleado?',
+        async () => {
+
+            try {
+
+                const result = await fetchAPI(
+                    'DELETE',
+                    `${ENDPOINT}/${empleadoId}`,
+                    null
+                );
+
+                if (result.ok) {
+
+                    showSuccess(
+                        'Empleado eliminado'
+                    );
+
+                    await loadEmpleados();
+
+                } else {
+
+                    showError(
+                        result.data?.detail ||
+                        'Error al eliminar'
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                showError('Error de conexión');
+            }
         }
-    });
+    );
 }
 
+/* =========================================
+   CARGAR EMPLEADOS
+========================================= */
 async function loadEmpleados() {
-    const result = await fetchAPI('GET', `${ENDPOINT}?limit=100`, null);
-    
-    if (result.ok) {
-        allEmpleados = result.data || [];
-        renderEmpleados();
-        updateStats();
+
+    try {
+
+        const result = await fetchAPI(
+            'GET',
+            `${ENDPOINT}?limit=100`,
+            null
+        );
+
+        if (result.ok) {
+
+            allEmpleados =
+                result.data || [];
+
+            filteredEmpleados =
+                [...allEmpleados];
+
+            renderEmpleados();
+
+            updateStats();
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError(
+            'No se pudieron cargar los empleados'
+        );
     }
 }
 
+/* =========================================
+   RENDER EMPLEADOS
+========================================= */
 function renderEmpleados() {
-    const container = document.getElementById('empleadosContainer');
-    
-    if (allEmpleados.length === 0) {
+
+    const container =
+        document.getElementById(
+            'empleadosContainer'
+        );
+
+    if (!filteredEmpleados.length) {
+
         container.innerHTML = `
-            <div style="grid-column: 1 / -1; text-center py-5;">
-                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                <p class="mt-3 text-muted">No hay empleados registrados</p>
+            <div class="text-center py-5"
+                 style="grid-column:1/-1;">
+
+                <i class="bi bi-inbox"
+                   style="
+                        font-size:48px;
+                        color:#ccc;
+                   ">
+                </i>
+
+                <p class="mt-3 text-muted">
+                    No hay empleados registrados
+                </p>
             </div>
         `;
+
         return;
     }
 
-    container.innerHTML = allEmpleados.map((e, idx) => `
-        <div class="empleado-card ${e.estado}" style="animation-delay: ${idx * 0.1}s">
+    container.innerHTML =
+        filteredEmpleados.map((e, idx) => `
+
+        <div class="
+            empleado-card
+            ${e.activo ? 'activo' : 'inactivo'}
+        "
+        style="animation-delay:${idx * 0.08}s">
+
             <div class="empleado-header">
-                <div class="empleado-avatar">👤</div>
-                <div class="empleado-nombre">${e.nombre} ${e.apellido}</div>
-                <div class="empleado-rol">${e.rol}</div>
+
+                <div class="empleado-avatar">
+                    👤
+                </div>
+
+                <div class="empleado-nombre">
+                    ${e.nombre} ${e.apellido}
+                </div>
+
+                <div class="empleado-rol">
+                    EMPLEADO
+                </div>
+
             </div>
+
             <div class="empleado-body">
-                <div class="empleado-status status-${e.estado}">${e.estado.toUpperCase()}</div>
-                
+
+                <div class="
+                    empleado-status
+                    status-${e.activo ? 'activo' : 'inactivo'}
+                ">
+                    ${e.activo ? 'ACTIVO' : 'INACTIVO'}
+                </div>
+
                 <div class="empleado-info">
+
                     <div class="info-item">
                         <i class="bi bi-envelope"></i>
-                        <span>${e.correo}</span>
+
+                        <span>
+                            ${e.correo_electronico || 'Sin correo'}
+                        </span>
                     </div>
+
                     <div class="info-item">
                         <i class="bi bi-telephone"></i>
-                        <span>${e.celular || 'No disponible'}</span>
+
+                        <span>
+                            ${e.celular || 'Sin teléfono'}
+                        </span>
                     </div>
+
                     <div class="info-item">
-                        <i class="bi bi-building"></i>
-                        <span>${e.hotel?.nombre || 'Hotel'}</span>
+                        <i class="bi bi-calendar"></i>
+
+                        <span>
+                            ${
+                                e.fecha_contratacion
+                                    ? new Date(
+                                        e.fecha_contratacion
+                                      ).toLocaleDateString('es-CO')
+                                    : 'Sin fecha'
+                            }
+                        </span>
                     </div>
+
                 </div>
 
                 <div class="empleado-actions">
-                    <button class="empleado-btn btn-view" onclick="viewEmpleadoDetails(${e.id_empleado})">
-                        <i class="bi bi-eye"></i> Ver
+
+                    <button
+                        class="empleado-btn btn-view"
+                        onclick="viewEmpleadoDetails(${e.id_empleado})">
+
+                        <i class="bi bi-eye"></i>
+                        Ver
                     </button>
-                    <button class="empleado-btn btn-edit" onclick="editEmpleado(${e.id_empleado})">
-                        <i class="bi bi-pencil"></i> Editar
+
+                    <button
+                        class="empleado-btn btn-edit"
+                        onclick="editEmpleado(${e.id_empleado})">
+
+                        <i class="bi bi-pencil"></i>
+                        Editar
                     </button>
-                    <button class="empleado-btn btn-delete" onclick="deleteEmpleado(${e.id_empleado})">
-                        <i class="bi bi-trash"></i> Borrar
+
+                    <button
+                        class="empleado-btn btn-delete"
+                        onclick="deleteEmpleado(${e.id_empleado})">
+
+                        <i class="bi bi-trash"></i>
+                        Borrar
                     </button>
+
                 </div>
+
             </div>
+
         </div>
+
     `).join('');
 }
 
+/* =========================================
+   ACTUALIZAR STATS
+========================================= */
 function updateStats() {
-    const total = allEmpleados.length;
-    const activos = allEmpleados.filter(e => e.estado === 'activo').length;
-    const depts = new Set(allEmpleados.map(e => e.rol)).size;
-    const hotels = new Set(allEmpleados.map(e => e.hotel_id)).size;
 
-    document.getElementById('totalEmpleados').textContent = total;
-    document.getElementById('activos').textContent = activos;
-    document.getElementById('departamentos').textContent = depts;
-    document.getElementById('hoteles').textContent = hotels;
+    const total =
+        allEmpleados.length;
+
+    const activos =
+        allEmpleados.filter(
+            e => e.activo
+        ).length;
+
+    document.getElementById(
+        'totalEmpleados'
+    ).textContent = total;
+
+    document.getElementById(
+        'activos'
+    ).textContent = activos;
+
+    document.getElementById(
+        'departamentos'
+    ).textContent = 1;
+
+    document.getElementById(
+        'hoteles'
+    ).textContent = 1;
 }
 
-document.getElementById('searchInput')?.addEventListener('input', function() {
-    const term = this.value.toLowerCase();
-    const filtered = allEmpleados.filter(e =>
-        `${e.nombre} ${e.apellido}`.toLowerCase().includes(term)
-    );
-    allEmpleados = filtered;
+/* =========================================
+   BUSCADOR
+========================================= */
+document
+    .getElementById('searchInput')
+    ?.addEventListener('input', function () {
+
+        const term =
+            this.value.toLowerCase();
+
+        filteredEmpleados =
+            allEmpleados.filter(e => {
+
+                const nombreCompleto =
+                    `${e.nombre} ${e.apellido}`
+                    .toLowerCase();
+
+                return nombreCompleto.includes(term);
+            });
+
+        renderEmpleados();
+    });
+
+/* =========================================
+   RESET FILTROS
+========================================= */
+function resetFilters() {
+
+    document.getElementById(
+        'searchInput'
+    ).value = '';
+
+    filteredEmpleados =
+        [...allEmpleados];
+
     renderEmpleados();
-});
+}
 
-window.resetFilters = function() {
-    location.reload();
-};
-
-document.addEventListener('DOMContentLoaded', loadEmpleados);
+/* =========================================
+   INIT
+========================================= */
+document.addEventListener(
+    'DOMContentLoaded',
+    loadEmpleados
+);
 </script>
 {% endblock %}

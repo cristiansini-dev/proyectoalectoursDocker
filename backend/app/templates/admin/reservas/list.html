@@ -485,231 +485,497 @@
 
 <script>
 const ENDPOINT = '/api/reservas';
+
 let allReservas = [];
 let currentReservaId = null;
 
-function openNewReservaModal() {
-    currentReservaId = null;
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-calendar-plus"></i> Nueva Reserva';
-    document.getElementById('reservaForm').reset();
-    new bootstrap.Modal(document.getElementById('reservaModal')).show();
-}
-
-async function saveReserva() {
-    const formData = {
-        cliente_id: parseInt(document.getElementById('cliente_id').value),
-        habitacion_id: parseInt(document.getElementById('habitacion_id').value),
-        fecha_inicio: document.getElementById('fecha_inicio').value,
-        fecha_fin: document.getElementById('fecha_fin').value,
-        total_costo: parseFloat(document.getElementById('total_costo').value),
-        estado: document.getElementById('estado').value,
-        notas: document.getElementById('notas').value
-    };
-
-    const method = currentReservaId ? 'PUT' : 'POST';
-    const url = currentReservaId ? `${ENDPOINT}/${currentReservaId}` : ENDPOINT;
-
-    const result = await fetchAPI(method, url, formData);
-    if (result.ok) {
-        showSuccess(currentReservaId ? 'Reserva actualizada' : 'Reserva creada exitosamente');
-        bootstrap.Modal.getInstance(document.getElementById('reservaModal')).hide();
-        await loadReservas();
-    } else {
-        showError(result.data.detail || 'Error al guardar');
-    }
-}
-
-function viewReservaDetails(reservaId) {
-    const reserva = allReservas.find(r => r.id_reserva === reservaId);
-    if (!reserva) return;
-
-    const inicioDate = new Date(reserva.fecha_inicio);
-    const finDate = new Date(reserva.fecha_fin);
-    const noches = Math.ceil((finDate - inicioDate) / (1000 * 60 * 60 * 24));
-
-    const html = `
-        <div style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold;">Cliente</div>
-                    <div style="font-size: 16px; font-weight: bold; color: var(--text-primary);">${reserva.cliente?.nombre || '-'}</div>
-                </div>
-                <div>
-                    <span class="badge badge-${reserva.estado}">${reserva.estado}</span>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Inicio</div>
-                    <div style="font-size: 14px; color: var(--text-primary); font-weight: bold;">${inicioDate.toLocaleDateString('es-ES')}</div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Fin</div>
-                    <div style="font-size: 14px; color: var(--text-primary); font-weight: bold;">${finDate.toLocaleDateString('es-ES')}</div>
-                </div>
-            </div>
-
-            <div style="background: rgba(0, 168, 255, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Duración</div>
-                <div style="font-size: 16px; color: var(--primary-color); font-weight: bold;">${noches} noches</div>
-            </div>
-
-            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
-                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 10px;">Costo</div>
-                <div style="font-size: 24px; font-weight: bold; color: #28a745;">$${parseFloat(reserva.total_costo || 0).toFixed(2)}</div>
-            </div>
-
-            ${reserva.notas ? `
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;">Notas</div>
-                    <div style="font-size: 13px; color: var(--text-secondary);">${reserva.notas}</div>
-                </div>
-            ` : ''}
-        </div>
-    `;
-    
-    document.getElementById('detailsContent').innerHTML = html;
-    new bootstrap.Modal(document.getElementById('detailsModal')).show();
-}
-
-function editReserva(reservaId) {
-    const reserva = allReservas.find(r => r.id_reserva === reservaId);
-    if (!reserva) return;
-
-    currentReservaId = reservaId;
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-circle"></i> Editar Reserva';
-    document.getElementById('cliente_id').value = reserva.cliente_id;
-    document.getElementById('habitacion_id').value = reserva.habitacion_id;
-    document.getElementById('fecha_inicio').value = reserva.fecha_inicio.split('T')[0];
-    document.getElementById('fecha_fin').value = reserva.fecha_fin.split('T')[0];
-    document.getElementById('total_costo').value = reserva.total_costo;
-    document.getElementById('estado').value = reserva.estado;
-    document.getElementById('notas').value = reserva.notas || '';
-
-    new bootstrap.Modal(document.getElementById('reservaModal')).show();
-}
-
-function deleteReserva(reservaId) {
-    showConfirm('¿Cancelar esta reserva?', async () => {
-        const result = await fetchAPI('DELETE', `${ENDPOINT}/${reservaId}`, null);
-        if (result.ok) {
-            showSuccess('Reserva cancelada');
-            await loadReservas();
-        } else {
-            showError(result.data.detail || 'Error al cancelar');
-        }
-    });
-}
+// ============================
+// CARGAR RESERVAS
+// ============================
 
 async function loadReservas() {
-    const result = await fetchAPI('GET', `${ENDPOINT}?limit=100`, null);
-    
-    if (result.ok) {
-        allReservas = result.data || [];
-        renderReservas();
-        updateStats();
+
+    try {
+
+        const result = await fetchAPI(
+            'GET',
+            `${ENDPOINT}?limit=100`,
+            null
+        );
+
+        console.log('RESERVAS API:', result);
+
+        if (result.ok) {
+
+            allReservas = result.data || [];
+
+            renderReservas(allReservas);
+
+            updateStats();
+
+        } else {
+
+            showError('No se pudieron cargar las reservas');
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError('Error cargando reservas');
+
     }
+
 }
+
+// ============================
+// RENDER RESERVAS
+// ============================
 
 function renderReservas() {
     const container = document.getElementById('reservasContainer');
-    
-    if (allReservas.length === 0) {
+
+    if (!allReservas || allReservas.length === 0) {
         container.innerHTML = `
-            <div style="grid-column: 1 / -1; text-center py-5;">
-                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                <p class="mt-3 text-muted">No hay reservas registradas</p>
+            <div style="grid-column: 1 / -1; text-align:center; padding:40px;">
+                <i class="bi bi-inbox" style="font-size:48px;color:#ccc;"></i>
+                <p>No hay reservas registradas</p>
             </div>
         `;
         return;
     }
 
     container.innerHTML = allReservas.map((r, idx) => {
-        const inicio = new Date(r.fecha_inicio);
-        const fin = new Date(r.fecha_fin);
-        const noches = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
-        
+
+        const inicio = r.fecha_inicio
+            ? new Date(r.fecha_inicio)
+            : null;
+
+        const fin = r.fecha_fin
+            ? new Date(r.fecha_fin)
+            : null;
+
+        const noches = inicio && fin
+            ? Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24))
+            : 0;
+
+        // CLIENTE
+        const cliente =
+            r.cliente?.nombre_cliente ||
+            r.cliente?.nombre ||
+            'Sin cliente';
+
+        // HABITACION
+        const habitacion =
+            r.reserva_habitaciones?.[0]?.habitacion?.numero_habitacion ||
+            r.reserva_habitaciones?.[0]?.id_habitacion ||
+            'N/A';
+
+        // HOTEL
+        const hotel =
+            r.reserva_habitaciones?.[0]?.habitacion?.hotel?.nombre ||
+            'Sin hotel';
+
         return `
-            <div class="reserva-card ${r.estado}" style="animation-delay: ${idx * 0.1}s">
+            <div class="reserva-card ${r.estado || 'pendiente'}"
+                 style="animation-delay:${idx * 0.1}s">
+
                 <div class="reserva-header">
-                    <div class="reserva-id">Reserva #${r.id_reserva}</div>
-                    <div class="reserva-cliente">${r.cliente?.nombre || 'Cliente'}</div>
+                    <div class="reserva-id">
+                        Reserva #${r.id_reserva}
+                    </div>
+
+                    <div class="reserva-cliente">
+                        ${cliente}
+                    </div>
                 </div>
+
                 <div class="reserva-body">
-                    <div class="reserva-status status-${r.estado}">${r.estado.toUpperCase()}</div>
-                    
+
+                    <div class="reserva-status status-${r.estado}">
+                        ${(r.estado || '').toUpperCase()}
+                    </div>
+
                     <div class="reserva-timeline">
+
                         <div class="timeline-item">
                             <div class="timeline-marker"></div>
+
                             <div class="timeline-text">
-                                <div class="timeline-date">${inicio.toLocaleDateString('es-ES')}</div>
-                                <div>Inicio</div>
+                                <div class="timeline-date">
+                                    ${inicio
+                                        ? inicio.toLocaleDateString('es-ES')
+                                        : 'N/A'}
+                                </div>
+
+                                <div>Check-in</div>
                             </div>
                         </div>
+
                         <div class="timeline-item">
-                            <div class="timeline-marker" style="background: #28a745;"></div>
+                            <div class="timeline-marker"
+                                 style="background:#28a745;">
+                            </div>
+
                             <div class="timeline-text">
-                                <div class="timeline-date">${fin.toLocaleDateString('es-ES')}</div>
+                                <div class="timeline-date">
+                                    ${fin
+                                        ? fin.toLocaleDateString('es-ES')
+                                        : 'N/A'}
+                                </div>
+
                                 <div>${noches} noches</div>
                             </div>
                         </div>
+
                     </div>
 
                     <div class="reserva-info">
+
                         <div class="info-row">
-                            <span class="info-label"><i class="bi bi-door-closed"></i> Habitación</span>
-                            <span class="info-value">Hab ${r.habitacion?.numero_habitacion || '-'}</span>
+                            <span class="info-label">
+                                <i class="bi bi-building"></i>
+                                Hotel
+                            </span>
+
+                            <span class="info-value">
+                                ${hotel}
+                            </span>
                         </div>
+
                         <div class="info-row">
-                            <span class="info-label"><i class="bi bi-cash-coin"></i> Total</span>
-                            <span class="info-value">$${parseFloat(r.total_costo || 0).toFixed(2)}</span>
+                            <span class="info-label">
+                                <i class="bi bi-door-closed"></i>
+                                Habitación
+                            </span>
+
+                            <span class="info-value">
+                                ${habitacion}
+                            </span>
                         </div>
+
+                        <div class="info-row">
+                            <span class="info-label">
+                                <i class="bi bi-people"></i>
+                                Personas
+                            </span>
+
+                            <span class="info-value">
+                                ${r.numero_personas || 0}
+                            </span>
+                        </div>
+
                     </div>
 
                     <div class="reserva-actions">
-                        <button class="reserva-btn btn-view" onclick="viewReservaDetails(${r.id_reserva})">
-                            <i class="bi bi-eye"></i> Ver
+
+                        <button class="reserva-btn btn-view"
+                            onclick="viewReservaDetails(${r.id_reserva})">
+
+                            <i class="bi bi-eye"></i>
+                            Ver
+
                         </button>
-                        <button class="reserva-btn btn-edit" onclick="editReserva(${r.id_reserva})">
-                            <i class="bi bi-pencil"></i> Editar
+
+                        <button class="reserva-btn btn-edit"
+                            onclick="editReserva(${r.id_reserva})">
+
+                            <i class="bi bi-pencil"></i>
+                            Editar
+
                         </button>
-                        <button class="reserva-btn btn-delete" onclick="deleteReserva(${r.id_reserva})">
-                            <i class="bi bi-trash"></i> Borrar
+
+                        <button class="reserva-btn btn-delete"
+                            onclick="deleteReserva(${r.id_reserva})">
+
+                            <i class="bi bi-trash"></i>
+                            Eliminar
+
                         </button>
+
                     </div>
+
                 </div>
             </div>
         `;
     }).join('');
 }
 
+// ============================
+// ESTADÍSTICAS
+// ============================
+
 function updateStats() {
+
     const total = allReservas.length;
-    const confirmadas = allReservas.filter(r => r.estado === 'confirmada').length;
-    const pendientes = allReservas.filter(r => r.estado === 'pendiente').length;
-    const ingresos = allReservas.reduce((sum, r) => sum + (parseFloat(r.total_costo || 0)), 0);
+
+    const confirmadas = allReservas.filter(
+        r => r.estado === 'confirmada'
+    ).length;
+
+    const pendientes = allReservas.filter(
+        r => r.estado === 'pendiente'
+    ).length;
+
+    const ingresos = allReservas.reduce((sum, r) => {
+
+        return sum + Number(r.total_costo || 0);
+
+    }, 0);
 
     document.getElementById('totalReservas').textContent = total;
+
     document.getElementById('confirmadas').textContent = confirmadas;
+
     document.getElementById('pendientes').textContent = pendientes;
-    document.getElementById('ingresos').textContent = `$${ingresos.toFixed(2)}`;
+
+    document.getElementById('ingresos').textContent =
+        `$${ingresos.toFixed(2)}`;
+
 }
 
-document.getElementById('searchInput')?.addEventListener('input', function() {
+// ============================
+// FILTRO BUSCADOR
+// ============================
+
+document.getElementById('searchInput')
+?.addEventListener('input', function () {
+
     const term = this.value.toLowerCase();
-    const filtered = allReservas.filter(r =>
-        (r.cliente?.nombre && r.cliente.nombre.toLowerCase().includes(term))
-    );
-    
-    allReservas = filtered;
-    renderReservas();
+
+    const filtered = allReservas.filter(r => {
+
+        const nombreCliente =
+            r.cliente?.nombre ||
+            r.cliente_nombre ||
+            '';
+
+        return nombreCliente
+            .toLowerCase()
+            .includes(term);
+
+    });
+
+    renderReservas(filtered);
+
 });
 
-window.resetFilters = function() {
-    location.reload();
-};
+// ============================
+// RESET FILTROS
+// ============================
 
-document.addEventListener('DOMContentLoaded', loadReservas);
+function resetFilters() {
+
+    document.getElementById('searchInput').value = '';
+
+    renderReservas(allReservas);
+
+}
+
+// ============================
+// NUEVA RESERVA
+// ============================
+
+function openNewReservaModal() {
+
+    currentReservaId = null;
+
+    document.getElementById('modalTitle').innerHTML = `
+        <i class="bi bi-calendar-plus"></i>
+        Nueva Reserva
+    `;
+
+    document.getElementById('reservaForm').reset();
+
+    new bootstrap.Modal(
+        document.getElementById('reservaModal')
+    ).show();
+
+}
+
+// ============================
+// GUARDAR RESERVA
+// ============================
+
+async function saveReserva() {
+
+    const formData = {
+
+        cliente_id: parseInt(
+            document.getElementById('cliente_id').value
+        ),
+
+        habitacion_id: parseInt(
+            document.getElementById('habitacion_id').value
+        ),
+
+        fecha_inicio:
+            document.getElementById('fecha_inicio').value,
+
+        fecha_fin:
+            document.getElementById('fecha_fin').value,
+
+        total_costo: parseFloat(
+            document.getElementById('total_costo').value
+        ),
+
+        estado:
+            document.getElementById('estado').value,
+
+        notas:
+            document.getElementById('notas').value
+
+    };
+
+    const method = currentReservaId
+        ? 'PUT'
+        : 'POST';
+
+    const url = currentReservaId
+        ? `${ENDPOINT}/${currentReservaId}`
+        : ENDPOINT;
+
+    const result = await fetchAPI(
+        method,
+        url,
+        formData
+    );
+
+    if (result.ok) {
+
+        showSuccess(
+            currentReservaId
+                ? 'Reserva actualizada'
+                : 'Reserva creada'
+        );
+
+        bootstrap.Modal.getInstance(
+            document.getElementById('reservaModal')
+        ).hide();
+
+        await loadReservas();
+
+    } else {
+
+        showError(
+            result.data?.detail || 'Error al guardar'
+        );
+
+    }
+
+}
+
+// ============================
+// ELIMINAR
+// ============================
+
+function deleteReserva(reservaId) {
+
+    showConfirm(
+        '¿Eliminar esta reserva?',
+        async () => {
+
+            const result = await fetchAPI(
+                'DELETE',
+                `${ENDPOINT}/${reservaId}`,
+                null
+            );
+
+            if (result.ok) {
+
+                showSuccess('Reserva eliminada');
+
+                await loadReservas();
+
+            } else {
+
+                showError(
+                    result.data?.detail || 'Error al eliminar'
+                );
+
+            }
+
+        }
+    );
+
+}
+
+// ============================
+// VER DETALLES
+// ============================
+
+function viewReservaDetails(reservaId) {
+
+    const reserva = allReservas.find(
+        r => r.id_reserva === reservaId
+    );
+
+    if (!reserva) return;
+
+    console.log(reserva);
+
+    showInfo(`Reserva #${reservaId}`);
+
+}
+
+// ============================
+// EDITAR
+// ============================
+
+function editReserva(reservaId) {
+
+    const reserva = allReservas.find(
+        r => r.id_reserva === reservaId
+    );
+
+    if (!reserva) return;
+
+    currentReservaId = reservaId;
+
+    document.getElementById('modalTitle').innerHTML = `
+        <i class="bi bi-pencil"></i>
+        Editar Reserva
+    `;
+
+    document.getElementById('cliente_id').value =
+        reserva.cliente_id || '';
+
+    document.getElementById('habitacion_id').value =
+        reserva.habitacion_id || '';
+
+    document.getElementById('fecha_inicio').value =
+        reserva.fecha_inicio
+            ? reserva.fecha_inicio.split('T')[0]
+            : '';
+
+    document.getElementById('fecha_fin').value =
+        reserva.fecha_fin
+            ? reserva.fecha_fin.split('T')[0]
+            : '';
+
+    document.getElementById('total_costo').value =
+        reserva.total_costo || 0;
+
+    document.getElementById('estado').value =
+        reserva.estado || 'pendiente';
+
+    document.getElementById('notas').value =
+        reserva.notas || '';
+
+    new bootstrap.Modal(
+        document.getElementById('reservaModal')
+    ).show();
+
+}
+
+// ============================
+// INIT
+// ============================
+
+document.addEventListener(
+    'DOMContentLoaded',
+    loadReservas
+);
 </script>
 {% endblock %}

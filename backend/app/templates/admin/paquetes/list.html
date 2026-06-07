@@ -1,645 +1,819 @@
 {% extends "layouts/base.html" %}
+
 {% block title %}Paquetes - AlecTours Admin{% endblock %}
 {% block navbar_title %}Gestión de Paquetes{% endblock %}
+
 {% block content %}
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Gestión de Paquetes Turísticos</h1>
         <p class="text-muted">Administra paquetes y promociones especiales</p>
     </div>
+
     <div class="page-actions">
         <button class="btn btn-primary" onclick="openNewPaqueteModal()">
-            <i class="bi bi-plus"></i> Nuevo Paquete
+            <i class="bi bi-plus"></i>
+            Nuevo Paquete
         </button>
     </div>
 </div>
 
 <!-- ESTADÍSTICAS -->
 <div class="row g-3 mb-4">
+
     <div class="col-md-3">
         <div class="stat-mini">
             <div class="stat-mini-icon">
                 <i class="bi bi-gift"></i>
             </div>
+
             <div class="stat-mini-content">
                 <div class="stat-mini-label">Total Paquetes</div>
                 <div class="stat-mini-value" id="totalPaquetes">0</div>
             </div>
         </div>
     </div>
+
     <div class="col-md-3">
         <div class="stat-mini success">
             <div class="stat-mini-icon">
                 <i class="bi bi-check-circle"></i>
             </div>
+
             <div class="stat-mini-content">
                 <div class="stat-mini-label">Activos</div>
                 <div class="stat-mini-value" id="activos">0</div>
             </div>
         </div>
     </div>
+
     <div class="col-md-3">
         <div class="stat-mini warning">
             <div class="stat-mini-icon">
                 <i class="bi bi-tag"></i>
             </div>
-            <div class="stat-mini-content">
-                <div class="stat-mini-label">Con Descuento</div>
-                <div class="stat-mini-value" id="descuentos">0</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-mini info">
-            <div class="stat-mini-icon">
-                <i class="bi bi-graph-up"></i>
-            </div>
+
             <div class="stat-mini-content">
                 <div class="stat-mini-label">Precio Promedio</div>
                 <div class="stat-mini-value" id="precioPromedio">$0</div>
             </div>
         </div>
     </div>
+
 </div>
 
 <!-- FILTROS -->
 <div class="card mb-4 filters-card">
     <div class="card-body">
+
         <div class="row g-3 align-items-end">
-            <div class="col-md-4">
+
+            <div class="col-md-6">
                 <div class="input-group">
                     <span class="input-group-text">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar paquete...">
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="form-control"
+                        placeholder="Buscar paquete..."
+                    >
                 </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small">Destinación</label>
-                <select class="form-select" id="filterDestino">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="col-md-2">
+
+            <div class="col-md-3">
                 <label class="form-label small">Estado</label>
+
                 <select class="form-select" id="filterEstado">
                     <option value="">Todos</option>
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
+                    <option value="true">Activo</option>
+                    <option value="false">Inactivo</option>
                 </select>
             </div>
-            <div class="col-md-2">
+
+            <div class="col-md-3">
                 <button class="btn btn-secondary w-100" onclick="resetFilters()">
-                    <i class="bi bi-arrow-clockwise"></i> Limpiar
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Limpiar
                 </button>
             </div>
+
         </div>
+
     </div>
 </div>
 
-<!-- VISTA EN TARJETAS -->
+<!-- CONTENEDOR -->
 <div class="paquetes-grid" id="paquetesContainer">
+
     <div class="text-center py-5" style="grid-column: 1 / -1;">
         <div class="loader" style="margin: 0 auto;"></div>
         <p class="mt-3">Cargando paquetes...</p>
     </div>
+
 </div>
 
-<!-- MODAL NUEVO PAQUETE -->
+<!-- MODAL -->
 <div class="modal fade" id="paqueteModal" tabindex="-1">
+
     <div class="modal-dialog modal-lg">
+
         <div class="modal-content">
+
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">
-                    <i class="bi bi-gift"></i> Nuevo Paquete
+                    <i class="bi bi-gift"></i>
+                    Nuevo Paquete
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                ></button>
             </div>
+
             <div class="modal-body">
+
                 <form id="paqueteForm">
-                    <div class="form-group mb-3">
-                        <label class="form-label">Nombre del Paquete</label>
-                        <input type="text" class="form-control" id="nombre" placeholder="Ej: Vacaciones de Lujo" required>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+
+                        <input
+                            type="text"
+                            id="nombre"
+                            class="form-control"
+                            required
+                        >
                     </div>
 
-                    <div class="form-group mb-3">
+                    <div class="mb-3">
                         <label class="form-label">Descripción</label>
-                        <textarea class="form-control" id="descripcion" rows="3" placeholder="Descripción del paquete..." required></textarea>
+
+                        <textarea
+                            id="descripcion"
+                            class="form-control"
+                            rows="3"
+                        ></textarea>
                     </div>
 
                     <div class="row">
+
                         <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Destino</label>
-                                <input type="text" class="form-control" id="destino" placeholder="Ej: Cartagena" required>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Duración (días)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="duracion_dias"
+                                    class="form-control"
+                                    min="1"
+                                >
                             </div>
+
                         </div>
+
                         <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Duración (días)</label>
-                                <input type="number" class="form-control" id="duracion_dias" min="1" required>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Precio Base
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="precio"
+                                    class="form-control"
+                                    step="0.01"
+                                    min="0"
+                                >
                             </div>
+
                         </div>
+
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Precio</label>
-                                <input type="number" class="form-control" id="precio" placeholder="0.00" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Descuento (%)</label>
-                                <input type="number" class="form-control" id="descuento" min="0" max="100" placeholder="0">
-                            </div>
-                        </div>
+                    <div class="mb-3">
+
+                        <label class="form-label">Estado</label>
+
+                        <select id="activo" class="form-select">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Disponibilidad</label>
-                                <input type="number" class="form-control" id="disponibilidad" min="0" placeholder="0" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Estado</label>
-                                <select class="form-select" id="estado">
-                                    <option value="activo">Activo</option>
-                                    <option value="inactivo">Inactivo</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="savePaquete()">
-                    <i class="bi bi-check"></i> Guardar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- MODAL DETALLES -->
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-info-circle"></i> Detalles del Paquete
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div id="detailsContent"></div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    onclick="savePaquete()"
+                >
+                    <i class="bi bi-check"></i>
+                    Guardar
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <style>
-.paquetes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+
+.paquetes-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:20px;
 }
 
-.paquete-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: slideUp 0.6s ease-out backwards;
-    border-left: 4px solid #ff6b9d;
-    display: flex;
-    flex-direction: column;
+.paquete-card{
+    background:white;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    transition:.3s;
+    border-left:4px solid #ff6b9d;
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.paquete-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 12px 28px rgba(255,107,157,.15);
 }
 
-.paquete-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(255, 107, 157, 0.15);
+.paquete-card.inactivo{
+    opacity:.7;
+    border-left-color:#ccc;
 }
 
-.paquete-card.inactivo {
-    opacity: 0.7;
-    border-left-color: #ccc;
+.paquete-header{
+    background:linear-gradient(135deg,#ffe5ec 0%,#ffd1e8 100%);
+    padding:16px;
 }
 
-.paquete-header {
-    background: linear-gradient(135deg, #ffe5ec 0%, #ffd1e8 100%);
-    padding: 16px;
-    border-bottom: 1px solid var(--border-color);
+.paquete-nombre{
+    font-size:20px;
+    font-weight:bold;
 }
 
-.paquete-destino {
-    font-size: 12px;
-    color: #ff6b9d;
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 5px;
+.paquete-body{
+    padding:16px;
 }
 
-.paquete-nombre {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--text-primary);
+.precio{
+    font-size:32px;
+    color:#ff6b9d;
+    font-weight:bold;
+    margin-bottom:14px;
 }
 
-.paquete-body {
-    padding: 16px;
-    flex: 1;
+.status{
+    width:100%;
+    text-align:center;
+    padding:7px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:16px;
 }
 
-.paquete-precio {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 12px;
+.status.activo{
+    background:rgba(40,167,69,.12);
+    color:#28a745;
 }
 
-.precio-actual {
-    font-size: 24px;
-    font-weight: bold;
-    color: #ff6b9d;
+.status.inactivo{
+    background:rgba(0,0,0,.06);
+    color:#777;
 }
 
-.precio-original {
-    font-size: 14px;
-    color: #ccc;
-    text-decoration: line-through;
+.info-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px;
+    background:rgba(255,107,157,.06);
+    border-radius:8px;
+    margin-bottom:10px;
+    font-size:13px;
 }
 
-.descuento-badge {
-    background: #ff6b9d;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
+.paquete-actions{
+    display:flex;
+    gap:8px;
+    margin-top:16px;
 }
 
-.paquete-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
+.paquete-btn{
+    flex:1;
+    border:none;
+    border-radius:8px;
+    padding:9px;
+    cursor:pointer;
+    transition:.3s;
+    font-size:12px;
+    font-weight:600;
 }
 
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    padding: 8px;
-    background: rgba(255, 107, 157, 0.05);
-    border-radius: 6px;
+.btn-view{
+    background:rgba(255,107,157,.1);
+    color:#ff6b9d;
 }
 
-.info-item i {
-    color: #ff6b9d;
-    width: 16px;
-    text-align: center;
+.btn-edit{
+    background:rgba(40,167,69,.1);
+    color:#28a745;
 }
 
-.paquete-status {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    width: 100%;
-    text-align: center;
+.btn-delete{
+    background:rgba(220,53,69,.1);
+    color:#dc3545;
 }
 
-.status-activo {
-    background: rgba(40, 167, 69, 0.1);
-    color: #28a745;
+.paquete-btn:hover{
+    transform:translateY(-2px);
 }
 
-.status-inactivo {
-    background: rgba(200, 200, 200, 0.2);
-    color: #999;
+.stat-mini{
+    background:white;
+    border-radius:12px;
+    padding:16px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
 }
 
-.paquete-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: auto;
+.stat-mini-icon{
+    width:45px;
+    height:45px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,107,157,.1);
+    color:#ff6b9d;
+    font-size:22px;
 }
 
-.paquete-btn {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+.stat-mini-label{
+    font-size:12px;
+    text-transform:uppercase;
+    color:#666;
+    font-weight:600;
 }
 
-.btn-view { background: rgba(255, 107, 157, 0.1); color: #ff6b9d; }
-.btn-view:hover { background: rgba(255, 107, 157, 0.2); transform: translateY(-2px); }
-
-.btn-edit { background: rgba(40, 167, 69, 0.1); color: #28a745; }
-.btn-edit:hover { background: rgba(40, 167, 69, 0.2); transform: translateY(-2px); }
-
-.btn-delete { background: rgba(220, 53, 69, 0.1); color: #dc3545; }
-.btn-delete:hover { background: rgba(220, 53, 69, 0.2); transform: translateY(-2px); }
-
-.stat-mini {
-    background: white;
-    border-radius: 10px;
-    padding: 16px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    border-left: 4px solid #ff6b9d;
+.stat-mini-value{
+    font-size:24px;
+    font-weight:bold;
 }
 
-.stat-mini.success { border-left-color: #28a745; }
-.stat-mini.warning { border-left-color: #ffc107; }
-.stat-mini.info { border-left-color: #17a2b8; }
-
-.stat-mini-icon {
-    font-size: 24px;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 107, 157, 0.1);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ff6b9d;
+.loader{
+    width:40px;
+    height:40px;
+    border:4px solid #eee;
+    border-top-color:#ff6b9d;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
 }
 
-.stat-mini.success .stat-mini-icon { color: #28a745; background: rgba(40, 167, 69, 0.1); }
-.stat-mini.warning .stat-mini-icon { color: #ffc107; background: rgba(255, 193, 7, 0.15); }
-.stat-mini.info .stat-mini-icon { color: #17a2b8; background: rgba(23, 162, 184, 0.1); }
-
-.stat-mini-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
-.stat-mini-value { font-size: 24px; font-weight: bold; color: var(--text-primary); }
-
-.filters-card { background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); border: none; }
-
-.loader {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--light-bg);
-    border-top-color: #ff6b9d;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-@media (max-width: 768px) {
-    .paquetes-grid {
-        grid-template-columns: 1fr;
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
     }
 }
+
 </style>
 
 <script>
-const ENDPOINT = '/api/paquetes';
+
+const ENDPOINT = "/api/paquetes";
+
 let allPaquetes = [];
+let filteredPaquetes = [];
 let currentPaqueteId = null;
 
-function openNewPaqueteModal() {
+/* ============================
+   MODAL NUEVO
+============================ */
+
+function openNewPaqueteModal(){
+
     currentPaqueteId = null;
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-gift"></i> Nuevo Paquete';
-    document.getElementById('paqueteForm').reset();
-    new bootstrap.Modal(document.getElementById('paqueteModal')).show();
+
+    document.getElementById("modalTitle").innerHTML =
+        `<i class="bi bi-gift"></i> Nuevo Paquete`;
+
+    document.getElementById("paqueteForm").reset();
+
+    new bootstrap.Modal(
+        document.getElementById("paqueteModal")
+    ).show();
 }
 
-async function savePaquete() {
+/* ============================
+   GUARDAR
+============================ */
+
+async function savePaquete(){
+
     const formData = {
-        nombre: document.getElementById('nombre').value,
-        descripcion: document.getElementById('descripcion').value,
-        destino: document.getElementById('destino').value,
-        duracion_dias: parseInt(document.getElementById('duracion_dias').value),
-        precio: parseFloat(document.getElementById('precio').value),
-        descuento: parseFloat(document.getElementById('descuento').value) || 0,
-        disponibilidad: parseInt(document.getElementById('disponibilidad').value),
-        estado: document.getElementById('estado').value
+        nombre_paquete: document.getElementById("nombre").value,
+        descripcion: document.getElementById("descripcion").value,
+        duracion_dias: parseInt(
+            document.getElementById("duracion_dias").value
+        ) || 0,
+        precio_base: parseFloat(
+            document.getElementById("precio").value
+        ) || 0,
+        activo:
+            document.getElementById("activo").value === "true"
     };
 
-    const method = currentPaqueteId ? 'PUT' : 'POST';
-    const url = currentPaqueteId ? `${ENDPOINT}/${currentPaqueteId}` : ENDPOINT;
+    const method = currentPaqueteId ? "PUT" : "POST";
 
-    const result = await fetchAPI(method, url, formData);
-    if (result.ok) {
-        showSuccess(currentPaqueteId ? 'Paquete actualizado' : 'Paquete creado exitosamente');
-        bootstrap.Modal.getInstance(document.getElementById('paqueteModal')).hide();
-        await loadPaquetes();
-    } else {
-        showError(result.data.detail || 'Error al guardar');
-    }
-}
+    const url = currentPaqueteId
+        ? `${ENDPOINT}/${currentPaqueteId}`
+        : ENDPOINT;
 
-function viewPaqueteDetails(paqueteId) {
-    const paquete = allPaquetes.find(p => p.id_paquete === paqueteId);
-    if (!paquete) return;
+    try{
 
-    const precioConDescuento = paquete.precio * (1 - paquete.descuento / 100);
+        const response = await fetch(url,{
+            method:method,
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(formData)
+        });
 
-    const html = `
-        <div style="margin-bottom: 20px;">
-            <div style="font-size: 28px; font-weight: bold; color: var(--text-primary); margin-bottom: 10px;">${paquete.nombre}</div>
-            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">🌴 ${paquete.destino}</div>
-            <span class="badge" style="background-color: ${paquete.estado === 'activo' ? '#28a745' : '#ccc'}; color: white;">${paquete.estado}</span>
-        </div>
-
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 8px;">Descripción</div>
-            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${paquete.descripcion}</div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-            <div>
-                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-calendar"></i> Duración</div>
-                <div style="font-size: 16px; font-weight: bold; color: #ff6b9d;">${paquete.duracion_dias} días</div>
-            </div>
-            <div>
-                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; margin-bottom: 5px;"><i class="bi bi-boxes"></i> Disponibles</div>
-                <div style="font-size: 16px; font-weight: bold; color: var(--text-primary);">${paquete.disponibilidad}</div>
-            </div>
-        </div>
-
-        <div style="background: linear-gradient(135deg, #ffe5ec 0%, #ffd1e8 100%); padding: 12px; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold;">Precio</div>
-                    ${paquete.descuento > 0 ? `
-                        <div style="font-size: 14px; color: #999; text-decoration: line-through;">$${paquete.precio.toFixed(2)}</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #ff6b9d;">$${precioConDescuento.toFixed(2)}</div>
-                    ` : `
-                        <div style="font-size: 20px; font-weight: bold; color: #ff6b9d;">$${paquete.precio.toFixed(2)}</div>
-                    `}
-                </div>
-                ${paquete.descuento > 0 ? `
-                    <div style="background: #ff6b9d; color: white; padding: 8px 12px; border-radius: 6px; text-align: center;">
-                        <div style="font-size: 12px; font-weight: bold;">${paquete.descuento}%</div>
-                        <div style="font-size: 10px;">DESC.</div>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('detailsContent').innerHTML = html;
-    new bootstrap.Modal(document.getElementById('detailsModal')).show();
-}
-
-function editPaquete(paqueteId) {
-    const paquete = allPaquetes.find(p => p.id_paquete === paqueteId);
-    if (!paquete) return;
-
-    currentPaqueteId = paqueteId;
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-circle"></i> Editar Paquete';
-    document.getElementById('nombre').value = paquete.nombre;
-    document.getElementById('descripcion').value = paquete.descripcion;
-    document.getElementById('destino').value = paquete.destino;
-    document.getElementById('duracion_dias').value = paquete.duracion_dias;
-    document.getElementById('precio').value = paquete.precio;
-    document.getElementById('descuento').value = paquete.descuento || 0;
-    document.getElementById('disponibilidad').value = paquete.disponibilidad;
-    document.getElementById('estado').value = paquete.estado;
-
-    new bootstrap.Modal(document.getElementById('paqueteModal')).show();
-}
-
-function deletePaquete(paqueteId) {
-    showConfirm('¿Eliminar este paquete?', async () => {
-        const result = await fetchAPI('DELETE', `${ENDPOINT}/${paqueteId}`, null);
-        if (result.ok) {
-            showSuccess('Paquete eliminado');
-            await loadPaquetes();
-        } else {
-            showError(result.data.detail || 'Error al eliminar');
+        if(!response.ok){
+            throw new Error("Error guardando paquete");
         }
-    });
-}
 
-async function loadPaquetes() {
-    const result = await fetchAPI('GET', `${ENDPOINT}?limit=100`, null);
-    
-    if (result.ok) {
-        allPaquetes = result.data || [];
-        renderPaquetes();
-        updateStats();
+        bootstrap.Modal
+            .getInstance(document.getElementById("paqueteModal"))
+            .hide();
+
+        await loadPaquetes();
+
+    }catch(error){
+
+        console.error(error);
+        alert("Error guardando paquete");
+
     }
 }
 
-function renderPaquetes() {
-    const container = document.getElementById('paquetesContainer');
-    
-    if (allPaquetes.length === 0) {
-        container.innerHTML = `
-            <div style="grid-column: 1 / -1; text-center py-5;">
-                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                <p class="mt-3 text-muted">No hay paquetes registrados</p>
+/* ============================
+   CARGAR
+============================ */
+
+async function loadPaquetes(){
+
+    try{
+
+        const response = await fetch(`${ENDPOINT}?limit=100`);
+
+        if(!response.ok){
+            throw new Error("Error cargando paquetes");
+        }
+
+        allPaquetes = await response.json();
+
+        filteredPaquetes = [...allPaquetes];
+
+        renderPaquetes();
+
+        updateStats();
+
+    }catch(error){
+
+        console.error(error);
+
+        document.getElementById("paquetesContainer").innerHTML = `
+            <div class="text-center py-5"
+                 style="grid-column:1/-1;">
+                <i class="bi bi-x-circle"
+                   style="font-size:50px;color:#dc3545;">
+                </i>
+
+                <p class="mt-3">
+                    Error cargando paquetes
+                </p>
             </div>
         `;
+    }
+}
+
+/* ============================
+   RENDER
+============================ */
+
+function renderPaquetes(){
+
+    const container =
+        document.getElementById("paquetesContainer");
+
+    if(filteredPaquetes.length === 0){
+
+        container.innerHTML = `
+            <div class="text-center py-5"
+                 style="grid-column:1/-1;">
+                <i class="bi bi-inbox"
+                   style="font-size:50px;color:#ccc;">
+                </i>
+
+                <p class="mt-3 text-muted">
+                    No hay paquetes
+                </p>
+            </div>
+        `;
+
         return;
     }
 
-    container.innerHTML = allPaquetes.map((p, idx) => {
-        const precioConDescuento = p.precio * (1 - p.descuento / 100);
-        
-        return `
-            <div class="paquete-card ${p.estado}" style="animation-delay: ${idx * 0.1}s">
-                <div class="paquete-header">
-                    <div class="paquete-destino">🌴 ${p.destino}</div>
-                    <div class="paquete-nombre">${p.nombre}</div>
+    container.innerHTML = filteredPaquetes.map((p,index)=>`
+
+        <div class="paquete-card ${p.activo ? "" : "inactivo"}"
+             style="animation-delay:${index * 0.1}s">
+
+            <div class="paquete-header">
+
+                <div class="paquete-destino">
+                    🌴 PAQUETE TURÍSTICO
                 </div>
-                <div class="paquete-body">
-                    <div class="paquete-precio">
-                        ${p.descuento > 0 ? `
-                            <span class="precio-original">$${p.precio.toFixed(2)}</span>
-                            <span class="precio-actual">$${precioConDescuento.toFixed(2)}</span>
-                            <span class="descuento-badge">${p.descuento}% OFF</span>
-                        ` : `
-                            <span class="precio-actual">$${p.precio.toFixed(2)}</span>
-                        `}
-                    </div>
 
-                    <div class="paquete-status status-${p.estado}">${p.estado.toUpperCase()}</div>
-
-                    <div class="paquete-info">
-                        <div class="info-item">
-                            <i class="bi bi-calendar"></i>
-                            <span>${p.duracion_dias} días</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-box"></i>
-                            <span>${p.disponibilidad} disponibles</span>
-                        </div>
-                    </div>
-
-                    <div class="paquete-actions">
-                        <button class="paquete-btn btn-view" onclick="viewPaqueteDetails(${p.id_paquete})">
-                            <i class="bi bi-eye"></i> Ver
-                        </button>
-                        <button class="paquete-btn btn-edit" onclick="editPaquete(${p.id_paquete})">
-                            <i class="bi bi-pencil"></i> Editar
-                        </button>
-                        <button class="paquete-btn btn-delete" onclick="deletePaquete(${p.id_paquete})">
-                            <i class="bi bi-trash"></i> Borrar
-                        </button>
-                    </div>
+                <div class="paquete-nombre">
+                    ${p.nombre_paquete || "Sin nombre"}
                 </div>
+
             </div>
-        `;
-    }).join('');
+
+            <div class="paquete-body">
+
+                <div class="precio">
+                    $${Number(p.precio_base || 0).toFixed(2)}
+                </div>
+
+                <div class="status ${p.activo ? "activo" : "inactivo"}">
+                    ${p.activo ? "ACTIVO" : "INACTIVO"}
+                </div>
+
+                <div class="info-item">
+                    <i class="bi bi-calendar"></i>
+
+                    <span>
+                        ${p.duracion_dias || 0} días
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <i class="bi bi-card-text"></i>
+
+                    <span>
+                        ${(p.descripcion || "Sin descripción")
+                            .substring(0,50)}
+                    </span>
+                </div>
+
+                <div class="paquete-actions">
+
+                    <button class="paquete-btn btn-view"
+                            onclick="viewPaquete(${p.id_paquete})">
+                        <i class="bi bi-eye"></i>
+                        Ver
+                    </button>
+
+                    <button class="paquete-btn btn-edit"
+                            onclick="editPaquete(${p.id_paquete})">
+                        <i class="bi bi-pencil"></i>
+                        Editar
+                    </button>
+
+                    <button class="paquete-btn btn-delete"
+                            onclick="deletePaquete(${p.id_paquete})">
+                        <i class="bi bi-trash"></i>
+                        Borrar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `).join("");
 }
 
-function updateStats() {
+/* ============================
+   ESTADÍSTICAS
+============================ */
+
+function updateStats(){
+
     const total = allPaquetes.length;
-    const activos = allPaquetes.filter(p => p.estado === 'activo').length;
-    const descuentos = allPaquetes.filter(p => p.descuento > 0).length;
-    const promedio = total > 0 ? allPaquetes.reduce((sum, p) => sum + p.precio, 0) / total : 0;
 
-    document.getElementById('totalPaquetes').textContent = total;
-    document.getElementById('activos').textContent = activos;
-    document.getElementById('descuentos').textContent = descuentos;
-    document.getElementById('precioPromedio').textContent = `$${promedio.toFixed(2)}`;
+    const activos =
+        allPaquetes.filter(p => p.activo).length;
+
+    const promedio =
+        total > 0
+            ? allPaquetes.reduce(
+                (acc,p)=>acc + Number(p.precio_base || 0),
+                0
+            ) / total
+            : 0;
+
+    document.getElementById("totalPaquetes")
+        .textContent = total;
+
+    document.getElementById("activos")
+        .textContent = activos;
+
+    document.getElementById("precioPromedio")
+        .textContent = `$${promedio.toFixed(2)}`;
 }
 
-document.getElementById('searchInput')?.addEventListener('input', function() {
-    const term = this.value.toLowerCase();
-    const filtered = allPaquetes.filter(p =>
-        p.nombre.toLowerCase().includes(term) || p.destino.toLowerCase().includes(term)
+/* ============================
+   EDITAR
+============================ */
+
+function editPaquete(id){
+
+    const paquete =
+        allPaquetes.find(p => p.id_paquete === id);
+
+    if(!paquete) return;
+
+    currentPaqueteId = id;
+
+    document.getElementById("nombre").value =
+        paquete.nombre_paquete || "";
+
+    document.getElementById("descripcion").value =
+        paquete.descripcion || "";
+
+    document.getElementById("duracion_dias").value =
+        paquete.duracion_dias || 0;
+
+    document.getElementById("precio").value =
+        paquete.precio_base || 0;
+
+    document.getElementById("activo").value =
+        paquete.activo ? "true" : "false";
+
+    document.getElementById("modalTitle").innerHTML =
+        `<i class="bi bi-pencil"></i> Editar Paquete`;
+
+    new bootstrap.Modal(
+        document.getElementById("paqueteModal")
+    ).show();
+}
+
+/* ============================
+   VER
+============================ */
+
+function viewPaquete(id){
+
+    const paquete =
+        allPaquetes.find(p => p.id_paquete === id);
+
+    if(!paquete) return;
+
+    alert(
+`Paquete: ${paquete.nombre_paquete}
+
+Descripción:
+${paquete.descripcion || "Sin descripción"}
+
+Precio:
+$${Number(paquete.precio_base || 0).toFixed(2)}
+
+Duración:
+${paquete.duracion_dias || 0} días`
     );
-    allPaquetes = filtered;
+}
+
+/* ============================
+   ELIMINAR
+============================ */
+
+async function deletePaquete(id){
+
+    const confirmDelete =
+        confirm("¿Eliminar paquete?");
+
+    if(!confirmDelete) return;
+
+    try{
+
+        const response = await fetch(
+            `${ENDPOINT}/${id}`,
+            {
+                method:"DELETE"
+            }
+        );
+
+        if(!response.ok){
+            throw new Error();
+        }
+
+        await loadPaquetes();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error eliminando paquete");
+
+    }
+}
+
+/* ============================
+   FILTROS
+============================ */
+
+function applyFilters(){
+
+    const term =
+        document.getElementById("searchInput")
+            .value
+            .toLowerCase();
+
+    const estado =
+        document.getElementById("filterEstado").value;
+
+    filteredPaquetes = allPaquetes.filter(p=>{
+
+        const matchText =
+            (p.nombre_paquete || "")
+                .toLowerCase()
+                .includes(term);
+
+        let matchEstado = true;
+
+        if(estado !== ""){
+
+            matchEstado =
+                String(p.activo) === estado;
+        }
+
+        return matchText && matchEstado;
+    });
+
     renderPaquetes();
-});
+}
 
-window.resetFilters = function() {
-    location.reload();
-};
+function resetFilters(){
 
-document.addEventListener('DOMContentLoaded', loadPaquetes);
+    document.getElementById("searchInput").value = "";
+
+    document.getElementById("filterEstado").value = "";
+
+    filteredPaquetes = [...allPaquetes];
+
+    renderPaquetes();
+}
+
+document.getElementById("searchInput")
+    .addEventListener("input",applyFilters);
+
+document.getElementById("filterEstado")
+    .addEventListener("change",applyFilters);
+
+/* ============================
+   INIT
+============================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    loadPaquetes
+);
+
 </script>
+
 {% endblock %}
