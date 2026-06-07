@@ -4,17 +4,17 @@ FROM node:22-alpine
 # Carpeta de trabajo
 WORKDIR /app
 
-# Copiar package.json y package-lock.json primero
+# Copiar package.json
 COPY package*.json ./
 
 # Instalar dependencias
 RUN npm install
 
-# Copiar el resto del proyecto
+# Copiar proyecto
 COPY . .
 
-# Exponer puerto de Vite
+# Exponer puerto
 EXPOSE 5173
 
-# Ejecutar aplicación
-CMD ["npm", "run", "dev", "--host"]
+# Ejecutar vite
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

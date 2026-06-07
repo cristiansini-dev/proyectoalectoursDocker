@@ -136,3 +136,4 @@ class HistorialReserva(Base):
 
     reserva = relationship("Reserva", back_populates="historial_reservas")
     empleado_responsable = relationship("Empleado", back_populates="historial_reservas")
+
